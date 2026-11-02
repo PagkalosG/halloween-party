@@ -5,7 +5,10 @@ on:
     paths:
       - 'worker/**'
       - 'app.js'
+      - 'intro.js'
       - 'index.html'
+      - 'styles.css'
+      - 'assets/**'
       - '.github/workflows/album-tests.yml'
   pull_request:
     paths:
@@ -26,6 +29,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check app.js
+          node --check intro.js
           node --check worker/src/index.js
       - name: Reject obsolete upload and owner UI
         run: |
@@ -35,6 +39,14 @@ jobs:
             echo "Obsolete uploader UI detected"
             exit 1
           fi
+      - name: Verify responsive photographic hero assets
+        run: |
+          test -s assets/haunted-hero-desktop.webp
+          test -s assets/haunted-hero-mobile.webp
+          test "$(wc -c < assets/haunted-hero-desktop.webp)" -lt 950000
+          test "$(wc -c < assets/haunted-hero-mobile.webp)" -lt 950000
+          grep -q 'id="cinematicIntro"' index.html
+          grep -q 'src="./intro.js?v=1"' index.html
       - name: Worker security smoke tests
         working-directory: worker
         run: npm test
