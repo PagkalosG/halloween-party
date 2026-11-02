@@ -1,5 +1,6 @@
 name = "halloween-party-album-api"
 main = "src/index.js"
+keep_vars = true # Preserve Dashboard-managed variables across GitHub/Wrangler deploys
 compatibility_date = "2026-10-20"
 
 [vars]
