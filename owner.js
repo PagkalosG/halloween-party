@@ -76,11 +76,13 @@
     const p = google.picker;
     let view;
     if (kind === 'folder') {
+      // Let the owner browse all folders before granting access. Filtering
+      // immediately by a not-yet-authorized folder can render an empty view.
+      // Google Picker enforces user consent when the folder is selected.
       view = new p.DocsView(p.ViewId.FOLDERS)
         .setIncludeFolders(true)
         .setSelectFolderEnabled(true)
-        .setMode(p.DocsViewMode.LIST)
-        .setFileIds([settings.folderId]);
+        .setMode(p.DocsViewMode.LIST);
     } else {
       view = new p.DocsView(p.ViewId.DOCS)
         .setParent(settings.folderId)
