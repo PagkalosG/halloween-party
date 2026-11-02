@@ -29,15 +29,12 @@
     toastTimer=setTimeout(()=>{toast.hidden=true;},4500);
   }
   function setBanner(message,style='') {
-    banner.textContent=message;
-    banner.className='previewbar'+(style?' '+style:'');
+    $('#connectionText').textContent=message;
+    banner.className='archive-status'+(style?' '+style:'');
   }
   function setCounts() {
     const photos=collection.filter(x=>x.type==='image').length;
     const videos=collection.filter(x=>x.type==='video').length;
-    $('#photoCount').textContent=photos;
-    $('#videoCount').textContent=videos;
-    $('#totalCount').textContent=collection.length;
     $('#allFilterCount').textContent=collection.length;
     $('#imageFilterCount').textContent=photos;
     $('#videoFilterCount').textContent=videos;
@@ -64,15 +61,16 @@
       img.decoding='async';
       img.onerror=()=>{img.onerror=null;img.src='./assets/no-preview.svg';};
       const top=document.createElement('div');top.className='card-top';
-      const badge=document.createElement('span');
-      badge.className='chip'+(x.type==='video'?' video':'');
-      badge.textContent=x.type==='video'?'▶ ΒΙΝΤΕΟ':'ΦΩΤΟΓΡΑΦΙΑ';
-      top.append(badge);
+      if(x.type==='video') {
+        const badge=document.createElement('span');
+        badge.className='chip video';
+        badge.textContent='▶ ΒΙΝΤΕΟ';
+        top.append(badge);
+      }
       const labels=document.createElement('div');labels.className='card-labels';
       const titleWrap=document.createElement('div');
       const title=document.createElement('strong');title.textContent=x.title;
-      const date=document.createElement('small');date.textContent=formatDate(x.created);
-      titleWrap.append(title,date);
+      titleWrap.append(title);
       const icon=document.createElement('span');icon.className='card-view';
       icon.innerHTML=x.type==='video'?playSvg:expandSvg;
       labels.append(titleWrap,icon);
@@ -82,8 +80,8 @@
     gallery.replaceChildren(part);
     moreWrap.hidden=visible.length<=renderLimit;
     empty.hidden=visible.length!==0||busy;
-    if(!collection.length)empty.textContent='Δεν υπάρχουν ακόμη φωτογραφίες ή βίντεο στον φάκελο.';
-    else empty.textContent='Δεν βρέθηκαν αναμνήσεις με αυτά τα φίλτρα.';
+    if(!collection.length)empty.textContent='Το αρχείο είναι άδειο.';
+    else empty.textContent='Δεν βρέθηκαν πειστήρια.';
   }
   function normalize(item) {
     if(!item?.id || (item.type!=='video' && item.type!=='image'))return null;
@@ -114,14 +112,14 @@
       version=nextVersion;
       modified=true;
       setCounts();
-      setBanner('ΤΟ ΑΡΧΕΙΟ ΤΩΝ ΣΚΙΩΝ · ΖΩΝΤΑΝΗ ΣΥΛΛΟΓΗ','online');
+      setBanner('ΣΥΝΔΕΔΕΜΕΝΟ','online');
       if(!initial && additions>0)notify(
         additions===1?'Μία νέα ανάμνηση προστέθηκε στη συλλογή!':
           additions+' νέες αναμνήσεις προστέθηκαν στη συλλογή!'
       );
     }catch(e){
       if(initial) {
-        setBanner('Η ΣΥΛΛΟΓΗ ΔΕΝ ΕΙΝΑΙ ΑΚΟΜΗ ΔΙΑΘΕΣΙΜΗ','error');
+        setBanner('ΕΚΤΟΣ ΣΥΝΔΕΣΗΣ','error');
         empty.hidden=false;empty.textContent=e.message;
       }
       if(!initial)console.warn('Gallery update:',e.message);
@@ -208,7 +206,7 @@
   }
   async function initialize(){
     if(!apiBase){
-      setBanner('Η ΣΥΛΛΟΓΗ ΠΕΡΙΜΕΝΕΙ ΤΗ ΣΥΝΔΕΣΗ ΜΕ ΤΟ DRIVE','error');
+      setBanner('ΕΚΤΟΣ ΣΥΝΔΕΣΗΣ','error');
       empty.hidden=false;empty.textContent='Η υπηρεσία του άλμπουμ δεν έχει ακόμη συνδεθεί.';
       return;
     }
@@ -221,7 +219,7 @@
         if(document.visibilityState==='visible')checkUpdates();
       });
     }catch(e){
-      setBanner('Η ΣΥΛΛΟΓΗ ΠΕΡΙΜΕΝΕΙ ΤΗ ΣΥΝΔΕΣΗ ΜΕ ΤΟ DRIVE','error');
+      setBanner('ΕΚΤΟΣ ΣΥΝΔΕΣΗΣ','error');
       empty.hidden=false;empty.textContent=e.message;
     }
   }
