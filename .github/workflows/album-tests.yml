@@ -15,6 +15,8 @@ on:
       - 'worker/**'
       - 'app.js'
       - 'index.html'
+      - 'styles.css'
+      - 'assets/**'
       - '.github/workflows/album-tests.yml'
 jobs:
   test:
@@ -46,7 +48,9 @@ jobs:
           test "$(wc -c < assets/haunted-hero-desktop.webp)" -lt 950000
           test "$(wc -c < assets/haunted-hero-mobile.webp)" -lt 950000
           grep -q 'id="cinematicIntro"' index.html
-          grep -q 'src="./intro.js?v=1"' index.html
+          grep -q 'src="./intro.js?v=2"' index.html
+          grep -q 'id="ambientBackdrop"' index.html
+          grep -q 'id="introSkip"' index.html
       - name: Worker security smoke tests
         working-directory: worker
         run: npm test
