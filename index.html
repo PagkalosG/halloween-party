@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="./assets/haunted-hero-desktop.webp" media="(min-width: 681px)" fetchpriority="high">
   <link rel="preload" as="image" href="./assets/haunted-hero-mobile.webp" media="(max-width: 680px)" fetchpriority="high">
-  <link rel="stylesheet" href="./styles.css?v=5">
+  <link rel="stylesheet" href="./styles.css?v=6">
 </head>
 <body>
   <div class="screen-grain" aria-hidden="true"></div>
@@ -94,12 +94,8 @@
           <button class="filter" type="button" data-filter="video" aria-pressed="false">Βίντεο <span id="videoFilterCount">0</span></button>
         </div>
         <div class="gallery-tools">
-          <label class="searchbox">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
-            <input id="search" type="search" placeholder="Αναζήτηση…" aria-label="Αναζήτηση φωτογραφιών και βίντεο">
-          </label>
           <label><span class="sr-only">Ταξινόμηση</span>
-            <select id="sort" class="select"><option value="new">Νεότερα πρώτα</option><option value="old">Παλαιότερα πρώτα</option><option value="name">Με όνομα</option></select>
+            <select id="sort" class="select"><option value="new">Νεότερα πρώτα</option><option value="old">Παλαιότερα πρώτα</option></select>
           </label>
         </div>
       </div>
@@ -132,6 +128,6 @@
 
   <script src="./config.js"></script>
   <script defer src="./intro.js?v=2"></script>
-  <script defer src="./app.js?v=4"></script>
+  <script defer src="./app.js?v=5"></script>
 </body>
 </html>
