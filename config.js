@@ -1,4 +1,4 @@
-// Public configuration only. Do NOT put credentials, tokens or secrets here.
+// Public API URL only. Never put OAuth credentials or secrets in this file.
 window.SHADOW_ALBUM_CONFIG = {
-  apiBase: "" // e.g. "https://halloween-album-api.YOUR-SUBDOMAIN.workers.dev"
+  apiBase: "https://halloween-party-album-api.pagkalosgeo.workers.dev"
 };
