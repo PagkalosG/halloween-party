@@ -1,7 +1,10 @@
 /**
  * Shadow Album Worker — Drive list/read + authenticated upload sessions.
- * All GET media requests validate membership in exactly one folder.
- * Public write requests require Cloudflare Turnstile before a short-lived grant.
+ * Uses the non-sensitive Google OAuth drive.file scope: only app-created and
+ * individually Picker-approved items may be accessed. Google Drive, not the
+ * Worker, enforces that scope. Do not authorize the broad drive scope.
+ * All public GET media requests validate direct membership in one folder.
+ * Public writes require Cloudflare Turnstile and encrypted upload sessions.
  */
 const DRIVE = 'https://www.googleapis.com/drive/v3/files';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType';
@@ -142,6 +145,41 @@ async function unpack(env, signed) {
     return data.exp > Date.now() ? data : null;
   } catch { return null; }
 }
+// A Google resumable upload URL is a bearer capability. Never place that URL
+// inside a readable HMAC/JWT payload sent to an anonymous visitor.
+async function sessionKey(env) {
+  const raw = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(env.UPLOAD_SIGNING_KEY));
+  return crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+}
+async function sealSession(env, value) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  const result = await crypto.subtle.encrypt({name:'AES-GCM',iv}, await sessionKey(env), bytes);
+  return 'v1.' + b64url(iv) + '.' + b64url(new Uint8Array(result));
+}
+async function openSession(env, value) {
+  if (typeof value !== 'string' || value.length > 9000) return null;
+  const parts = value.split('.');
+  if (parts.length !== 3 || parts[0] !== 'v1') return null;
+  try {
+    const iv = unb64(parts[1]);
+    if (iv.length !== 12) return null;
+    const payload = await crypto.subtle.decrypt(
+      {name:'AES-GCM',iv}, await sessionKey(env), unb64(parts[2])
+    );
+    const session = JSON.parse(new TextDecoder().decode(payload));
+    return session.exp > Date.now() ? session : null;
+  } catch { return null; }
+}
+async function folderStatus(env) {
+  const id = env.DRIVE_FOLDER_ID;
+  if (!goodId(id)) return false;
+  const query = new URLSearchParams({fields:'id,mimeType,trashed',supportsAllDrives:'true'});
+  const r = await driveFetch(env, DRIVE + '/' + urlEncode(id) + '?' + query);
+  if (!r.ok) return false;
+  const folder = await r.json();
+  return !folder.trashed && folder.id === id && folder.mimeType === 'application/vnd.google-apps.folder';
+}
 async function readSmallBody(request) {
   if (Number(request.headers.get('Content-Length') || 0) > 8192) return null;
   try { return await request.json(); } catch { return null; }
@@ -159,7 +197,7 @@ async function authorize(request, env) {
   const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {method:'POST',body:form});
   if (!r.ok) return failure('Ο έλεγχος ασφάλειας δεν ολοκληρώθηκε.', 502);
   const verdict = await r.json();
-  if (!verdict.success) return failure('Ο έλεγχος ασφάλειας απέτυχε. Δοκίμασε ξανά.', 403);
+  if (!verdict.success || verdict.hostname !== 'pagkalosg.github.io') return failure('Ο έλεγχος ασφάλειας απέτυχε. Δοκίμασε ξανά.', 403);
   const grant = await issue(env, {kind:'grant', ip, exp:Date.now()+15*60*1000});
   return reply({grant});
 }
@@ -173,6 +211,7 @@ async function startUpload(request, env) {
   const name = String(data?.name || '').replace(/[\\/\x00-\x1f]/g,'_').trim().slice(0,180);
   if (!Number.isSafeInteger(size) || size < 1 || size > MAX_FILE) return failure('Μέγιστο μέγεθος: 300 MB.', 413);
   if (!fileMime(mimeType) || !name) return failure('Επιτρέπονται μόνο φωτογραφίες και βίντεο.', 415);
+  if (!(await folderStatus(env))) return failure('Ο φάκελος δεν έχει επιλεγεί ακόμη με Google Picker. Άνοιξε το owner.html.', 403);
   const r = await driveFetch(env, UPLOAD, {
     method:'POST',
     headers:{'Content-Type':'application/json; charset=utf-8','X-Upload-Content-Type':mimeType,'X-Upload-Content-Length':String(size)},
@@ -184,12 +223,12 @@ async function startUpload(request, env) {
   const u = new URL(session);
   if (u.protocol !== 'https:' || u.hostname !== 'www.googleapis.com' || u.pathname !== '/upload/drive/v3/files')
     return failure('Μη έγκυρη απάντηση από το Drive.', 502);
-  const uploadToken = await issue(env, {kind:'session', session, size, ip, exp:Date.now()+60*60*1000});
+  const uploadToken = await sealSession(env, {kind:'session', session, size, ip, exp:Date.now()+60*60*1000});
   return reply({uploadToken, chunkSize:CHUNK});
 }
 async function uploadChunk(request, env) {
   if (!canUpload(env)) return failure('Η αποστολή δεν έχει ενεργοποιηθεί.', 503);
-  const data = await unpack(env, request.headers.get('X-Upload-Token'));
+  const data = await openSession(env, request.headers.get('X-Upload-Token'));
   if (!data || data.kind !== 'session' || data.ip !== (request.headers.get('CF-Connecting-IP') || ''))
     return failure('Η συνεδρία αποστολής έληξε.', 403);
   const u = new URL(data.session);
@@ -220,6 +259,8 @@ export default {
           turnstileSiteKey:canUpload(env)?env.TURNSTILE_SITE_KEY:null,maxFileBytes:MAX_FILE});
       } else if (!ready(env)) {
         result = failure('Το Google Drive δεν έχει εξουσιοδοτηθεί ακόμη.', 503);
+      } else if (url.pathname === '/api/folder-access' && request.method === 'GET') {
+        result = reply({folderAccessible:await folderStatus(env)});
       } else if (url.pathname === '/api/items' && request.method === 'GET') {
         result = await listFiles(env,request);
       } else if (url.pathname.startsWith('/api/thumb/') && request.method === 'GET') {
