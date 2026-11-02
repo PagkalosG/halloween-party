@@ -9,7 +9,7 @@
   const banner = $('#connectionBanner');
   const loading = $('#galleryLoading');
   const moreWrap = $('#moreWrap');
-  const playSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m8 5 12 7-12 7Z"/></svg>';
+  const playSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>';
   const expandSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>';
   let collection=[],visible=[],activeFilter='all',currentView=0;
   let version='',busy=false,renderLimit=96,toastTimer=0;
@@ -39,9 +39,6 @@
     $('#imageFilterCount').textContent=photos;
     $('#videoFilterCount').textContent=videos;
   }
-  const formatDate = date => Number.isFinite(date)
-    ? new Date(date).toLocaleDateString('el-GR',{day:'numeric',month:'short',year:'numeric'})
-    : '';
   function render() {
     const term=$('#search').value.trim().toLocaleLowerCase('el');
     const sort=$('#sort').value;
@@ -52,29 +49,37 @@
       sort==='name'?a.title.localeCompare(b.title,'el'):b.created-a.created);
     const part=document.createDocumentFragment();
     visible.slice(0,renderLimit).forEach((x,index)=>{
-      const card=document.createElement('figure');card.className='gallery-card';
-      const btn=document.createElement('button');btn.type='button';btn.className='card-hit';
-      btn.style.setProperty('--tile-h',(220+(index%5)*29)+'px');
-      btn.setAttribute('aria-label','Προβολή: '+x.title);
+      const card=document.createElement('figure');
+      card.className='gallery-card';
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='card-hit';
+      btn.style.setProperty('--tile-h',(240+(index%6)*32)+'px');
+      // Accessible without revealing internal Drive filenames in the UI.
+      btn.setAttribute('aria-label',(x.type==='video'?'Άνοιγμα βίντεο ':'Άνοιγμα φωτογραφίας ')+(index+1));
       const img=document.createElement('img');
-      img.src=x.poster;img.alt=x.title;img.loading=index<8?'eager':'lazy';
+      img.src=x.poster;
+      img.alt='';
+      img.loading=index<8?'eager':'lazy';
       img.decoding='async';
       img.onerror=()=>{img.onerror=null;img.src='./assets/no-preview.svg';};
-      const top=document.createElement('div');top.className='card-top';
-      if(x.type==='video') {
-        const badge=document.createElement('span');
-        badge.className='chip video';
-        badge.textContent='▶ ΒΙΝΤΕΟ';
-        top.append(badge);
+      const top=document.createElement('div');
+      top.className='card-top';
+      if(x.type==='video'){
+        const play=document.createElement('span');
+        play.className='video-play';
+        play.innerHTML=playSvg;
+        top.append(play);
       }
-      const labels=document.createElement('div');labels.className='card-labels';
-      const titleWrap=document.createElement('div');
-      const title=document.createElement('strong');title.textContent=x.title;
-      titleWrap.append(title);
-      const icon=document.createElement('span');icon.className='card-view';
-      icon.innerHTML=x.type==='video'?playSvg:expandSvg;
-      labels.append(titleWrap,icon);
-      btn.append(img,top,labels);card.append(btn);part.append(card);
+      btn.append(img,top);
+      if(x.type==='image'){
+        const expand=document.createElement('span');
+        expand.className='card-view';
+        expand.innerHTML=expandSvg;
+        btn.append(expand);
+      }
+      card.append(btn);
+      part.append(card);
       btn.addEventListener('click',()=>openViewer(index));
     });
     gallery.replaceChildren(part);
@@ -134,17 +139,16 @@
   function showViewer() {
     const x=visible[currentView];
     if(!x)return;
-    $('#viewTitle').textContent=x.title;
-    $('#viewMeta').textContent=formatDate(x.created)+' · '+(x.type==='video'?'Βίντεο':'Φωτογραφία');
+    $('#viewMeta').textContent=x.type==='video'?'ΒΙΝΤΕΟ':'ΦΩΤΟΓΡΑΦΙΑ';
     $('#viewIndex').textContent=(currentView+1)+' / '+visible.length;
     const slot=$('#viewerMedia');slot.replaceChildren();
     if(x.type==='video') {
       const video=document.createElement('video');
       video.src=x.src;video.controls=true;video.playsInline=true;
-      video.preload='metadata';video.poster=x.poster;video.setAttribute('aria-label',x.title);
+      video.preload='metadata';video.poster=x.poster;video.setAttribute('aria-label','Αναπαραγωγή βίντεο');
       slot.append(video);
     }else {
-      const img=document.createElement('img');img.src=x.src;img.alt=x.title;
+      const img=document.createElement('img');img.src=x.src;img.alt='Φωτογραφία σε πλήρη προβολή';
       slot.append(img);
     }
     $('#prevBtn').hidden=$('#nextBtn').hidden=visible.length<2;
