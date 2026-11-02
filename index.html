@@ -1,36 +1,120 @@
 <!doctype html>
 <html lang="el">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b0910">
-<meta name="description" content="Το Αρχείο των Σκιών — οι φωτογραφίες και τα βίντεο από τη νύχτα μας.">
-<title>Το Αρχείο των Σκιών — Ψηφιακό Άλμπουμ</title>
-<link rel="stylesheet" href="./styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#09080b">
+  <meta name="description" content="Το Αρχείο των Σκιών. Μια νύχτα. Αμέτρητα πειστήρια.">
+  <title>Το Αρχείο των Σκιών</title>
+  <link rel="stylesheet" href="./styles.css?v=2">
 </head>
 <body>
-<div class="previewbar" id="connectionBanner" role="status">Η ΣΥΛΛΟΓΗ ΣΥΝΔΕΕΤΑΙ ΜΕ ΤΟ GOOGLE DRIVE</div>
-<header class="topbar wrap">
-<a class="logo" href="#αρχή" aria-label="Επιστροφή στην αρχή"><span class="logomark"><svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 4a11 11 0 1 0 4 19A10 10 0 1 1 21 4Z" fill="#dab7a3" stroke="none"/><path d="m7 20 3-3 3 3 4-6m-2-5h.1"/></svg></span><span class="logotype"><strong>Το Αρχείο των Σκιών</strong><small>ΨΗΦΙΑΚΟ ΑΛΜΠΟΥΜ ΑΝΑΜΝΗΣΕΩΝ</small></span></a>
-<nav class="nav" aria-label="Κύρια πλοήγηση"><a href="#συλλογή">Η συλλογή</a><a href="#πληροφορίες">Πληροφορίες</a></nav>
-</header>
-<main class="wrap" id="αρχή">
-<section class="hero" aria-labelledby="main-title">
-<svg class="hero-stars" viewBox="0 0 1240 405" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="#f3c2ba" opacity=".33"><circle cx="675" cy="47" r="2"/><circle cx="805" cy="90" r="1.5"/><circle cx="1123" cy="84" r="1.5"/><circle cx="914" cy="177" r="1"/><circle cx="1010" cy="39" r="1.5"/><circle cx="1120" cy="250" r="2"/></g></svg>
-<div class="hero-inner">
-<div class="hero-left"><span class="overline">ΕΚΕΙΝΗ Η ΝΥΧΤΑ ΔΕΝ ΤΕΛΕΙΩΣΕ</span><h1 id="main-title">ΤΟ ΑΡΧΕΙΟ <em>ΤΩΝ ΣΚΙΩΝ</em></h1><p class="hero-sub">Κάποιες αναμνήσεις δεν πεθαίνουν ποτέ.</p><p class="hero-note">Οι φωτογραφίες, τα βίντεο και οι ύποπτες στιγμές από τη νύχτα του τρόμου. Μπες στο αρχείο... αν τολμάς.</p><div class="hero-actions"><a href="#συλλογή" class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Άνοιξε το άλμπουμ</a></div></div>
-<div class="hero-visual" aria-hidden="true"><div class="moon"></div><svg class="hero-bat" viewBox="0 0 140 80" fill="#140f19"><path d="M70 35Q45 2 28 27Q20 6 0 13Q6 39 36 51Q59 42 70 69Q81 42 104 51Q134 39 140 13Q120 6 112 27Q95 2 70 35Z"/></svg><div class="photo-stack photo-back"><img alt="" id="heroBack" src="./assets/hero-back.jpg"></div><div class="photo-stack"><img alt="" id="heroFront" src="./assets/hero-front.jpg"></div><svg class="hero-sil" viewBox="0 0 600 320"><path d="M0 290Q150 222 280 289T600 275V320H0Z" fill="#0b0a12"/><path d="M390 280V148h29v-31l27-40 25 40v31h25v132M420 280v-63h35v63" fill="#0c0c14"/><path d="M441 99V57m-16 20h31" stroke="#0b0a12" stroke-width="9"/><path d="M506 282V202h43v-60h13v140" fill="#0b0a13"/><path d="M33 304V116m0 76-61-68m61 31 70-79m-70 165 68-38" fill="none" stroke="#0a0a12" stroke-width="11"/><path d="M575 309V75m0 65-61-56m61 109 47-54" fill="none" stroke="#0a0a12" stroke-width="13"/></svg></div>
-</div></section>
-<div class="littleline">ΤΑ ΙΧΝΗ ΠΟΥ ΑΦΗΣΑΜΕ</div>
-<div class="stats" aria-label="Σύνοψη συλλογής"><div class="stat"><span class="statIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 18 5-5 4 3 3-4 5 6"/></svg></span><div><strong id="photoCount">0</strong><small>Φωτογραφίες</small></div></div><div class="stat"><span class="statIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4Z"/></svg></span><div><strong id="videoCount">0</strong><small>Βίντεο</small></div></div><div class="stat"><span class="statIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="m9 16 3-9 3 9-3-2Z"/></svg></span><div><strong id="totalCount">0</strong><small>Στιγμές στο αρχείο</small></div></div></div>
-<section id="συλλογή" aria-labelledby="gallery-heading"><div class="headingrow"><div><p class="eyebrow">ΑΠΑΓΟΡΕΥΜΕΝΕΣ ΑΝΑΜΝΗΣΕΙΣ</p><h2 class="gallery-title" id="gallery-heading">Η συλλογή της νύχτας</h2><p class="gallery-sub">Πάτησε σε μια φωτογραφία ή ένα βίντεο για μεγάλη προβολή. Η συλλογή ενημερώνεται αυτόματα μόνο όταν αλλάζει το περιεχόμενο του φακέλου.</p></div><div class="gallery-tools"><label class="searchbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.7" cy="10.7" r="7"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Αναζήτηση αναμνήσεων…" aria-label="Αναζήτηση αρχείων"></label><label><span class="invisible">Ταξινόμηση</span><select id="sort" class="select"><option value="new">Νεότερα πρώτα</option><option value="old">Παλαιότερα πρώτα</option><option value="name">Με όνομα</option></select></label></div></div>
-<div class="filterrow" role="group" aria-label="Φίλτρα αρχείων"><button type="button" class="filter active" data-filter="all" aria-pressed="true">Όλα <span id="allFilterCount">0</span></button><button type="button" class="filter" data-filter="image" aria-pressed="false">Φωτογραφίες <span id="imageFilterCount">0</span></button><button type="button" class="filter" data-filter="video" aria-pressed="false">Βίντεο <span id="videoFilterCount">0</span></button></div>
-<div id="galleryLoading" class="loading" hidden>Οι αναμνήσεις ξυπνούν…</div><div class="gallery" id="gallery"></div><div style="text-align:center;margin:20px 0" id="moreWrap" hidden><button class="btn btn-secondary" id="loadMore" type="button">Περισσότερες αναμνήσεις</button></div><div class="noresults" id="noresults" hidden>Δεν υπάρχουν ακόμη φωτογραφίες ή βίντεο στον φάκελο.</div></section>
-<section class="end-note" id="πληροφορίες"><div class="end-text"><span class="ghost-icon" aria-hidden="true">👻</span><div><strong>Κάθε καινούργια ανάμνηση βρίσκει τη θέση της.</strong><p>Το άλμπουμ συγχρονίζεται αυτόματα με τον φάκελο του πάρτι στο Google Drive. Νέες φωτογραφίες και βίντεο εμφανίζονται χωρίς νέα πρόσκληση, χωρίς login και χωρίς να χρειάζεται να ανανεώσεις τη σελίδα.</p></div></div><span class="album-readonly" aria-label="Συλλογή μόνο για προβολή">✦ Ψηφιακό αρχείο αναμνήσεων</span></section>
-</main>
-<footer class="wrap"><span>Το Αρχείο των Σκιών · Εκείνη η νύχτα ζει ακόμα.</span><span>Φωτογραφίες & βίντεο από τη νύχτα μας</span></footer>
-<dialog class="viewer" id="viewDialog" aria-label="Μεγάλη προβολή αρχείου"><div class="viewer-top"><strong id="viewTitle"></strong><div class="viewer-controls"><button type="button" id="viewDownload">↓ Λήψη</button><button type="button" id="closeViewer" aria-label="Κλείσιμο">✕</button></div></div><div class="viewer-stage" id="viewerStage"><button class="viewnav viewprev" id="prevBtn" aria-label="Προηγούμενο αρχείο">‹</button><div id="viewerMedia"></div><button class="viewnav viewnext" id="nextBtn" aria-label="Επόμενο αρχείο">›</button></div><div class="viewer-foot"><span id="viewMeta"></span><span id="viewIndex"></span></div></dialog>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="./config.js"></script>
-<script defer src="./app.js"></script>
-</body></html>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="topbar wrap">
+    <a class="brand" href="#αρχή" aria-label="Το Αρχείο των Σκιών — αρχική">
+      <span class="brand-seal" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="21" stroke="currentColor" opacity=".6"/><path d="M29 8C17 8 12 19 15 29c2 8 10 12 18 9-10 0-15-8-13-16 1-6 5-11 9-14Z" fill="currentColor"/><path d="m34 16 1.6 3.5L39 21l-3.4 1.4L34 26l-1.4-3.6L29 21l3.6-1.5Z" fill="currentColor"/></svg>
+      </span>
+      <span>ΤΟ ΑΡΧΕΙΟ <em>ΤΩΝ ΣΚΙΩΝ</em></span>
+    </a>
+    <a class="header-link" href="#συλλογή">Η ΣΥΛΛΟΓΗ <span aria-hidden="true">↗</span></a>
+  </header>
+  <main id="αρχή">
+    <section class="hero wrap" aria-labelledby="main-title">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="blood-moon" aria-hidden="true"></div>
+      <svg class="hero-scene" viewBox="0 0 1240 590" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#20121a"/><stop offset="1" stop-color="#07070a"/></linearGradient>
+          <g id="dead-tree" fill="none" stroke="#09090d" stroke-linecap="round">
+            <path d="M0 0 7-158M7-158l-22-44M7-158l28-38M3-106l-33-39M3-106l37-28M-12-166l-14-8M28-183l14-15" stroke-width="10"/>
+            <path d="m-15-202-11-19m62 26 14-14m-80 64-14-8m84 19 12-10" stroke-width="5"/>
+          </g>
+        </defs>
+        <path d="M0 471c130-45 201-28 298 4 112 37 203-45 318-41 117 5 173 44 263 18 117-31 214-24 361 14v124H0Z" fill="#1a1018"/>
+        <path d="M0 506c171-49 289 14 411 3 140-13 203-64 349-41 189 30 269 7 480-37v159H0Z" fill="url(#hill)"/>
+        <g opacity=".83"><use href="#dead-tree" transform="translate(112 552) scale(1.2)"/><use href="#dead-tree" transform="translate(313 551) scale(.64)"/><use href="#dead-tree" transform="translate(751 562) scale(.83)"/><use href="#dead-tree" transform="translate(1215 563) scale(1.13)"/></g>
+        <g class="manor">
+          <path d="M834 563V454l23-22v-52h31v-41l45-35 45 35v41h31v49h25v-73l49-64 49 64v73h29v-39l37-32 37 32v173Z" fill="#09090e"/>
+          <path d="M869 378h47v-18h12v-19h13v19h12v18h47M1038 353h21v-20h16v-20h15v-24h10v24h15v20h16v20h18" fill="none" stroke="#09090e" stroke-width="7"/>
+          <path d="M1077 297v-28m-12 13h24" stroke="#09090e" stroke-width="5"/>
+          <g fill="#e76757" opacity=".78">
+            <path d="M918 415v-28a13 13 0 0 1 26 0v28h-26Z"/>
+            <path d="M1073 401v-31a14 14 0 0 1 28 0v31h-28Z"/>
+            <path d="M1177 442v-26a10 10 0 0 1 20 0v26h-20Z"/>
+            <path d="M868 489v-23a9 9 0 0 1 18 0v23h-18Z"/>
+          </g>
+          <g fill="none" stroke="#100a10" stroke-width="4"><path d="M931 374v41m-13-21h26m143-41v48m-14-24h28m86 27v38m-10-21h20"/></g>
+          <path d="M969 562v-61a20 20 0 0 1 40 0v61" fill="#1b1015"/><path d="M978 560v-52a11 11 0 0 1 22 0v52" fill="#08080d"/>
+        </g>
+        <path d="M0 551c159-25 243-14 362 2 109 15 176-13 296-8 146 6 270 25 582-24v69H0Z" fill="#060709"/>
+        <g fill="none" stroke="#0b0a0d" stroke-width="4" opacity=".75">
+          <path d="M724 553v-34h27v34m-32-30h37m-10-28v24m-8-12h16"/>
+          <path d="M796 550v-27h18v27m-25-25h32"/>
+        </g>
+        <g class="bats" fill="#0c0a0e">
+          <path d="M735 169q-15-17-30-4l-19-5q10 23 31 24l18 17 18-17q22-1 31-24l-19 5q-15-13-30 4Z"/>
+          <path d="M823 123q-9-10-17-3l-12-4q8 15 18 15l11 9 11-9q13 0 19-15l-11 4q-9-7-19 3Z"/>
+          <path d="M678 226q-8-8-15-3l-9-3q5 12 15 12l9 8 9-8q11 0 16-12l-9 3q-7-5-16 3Z"/>
+        </g>
+      </svg>
+      <div class="fog fog-one" aria-hidden="true"></div>
+      <div class="fog fog-two" aria-hidden="true"></div>
+      <svg class="web-corner" viewBox="0 0 160 160" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M0 150V0h150M0 0l150 150M0 0l86 150M0 0l150 86"/>
+        <path d="M0 36q36-3 36-36M0 74q75-6 74-74M0 112q112-6 112-112M36 149q112-13 113-113M74 150q69-8 76-76"/>
+      </svg>
+      <div class="hero-content">
+        <p class="hero-kicker"><span class="kicker-line"></span> Η ΝΥΧΤΑ ΕΧΕΙ ΜΝΗΜΗ</p>
+        <h1 id="main-title">ΤΟ ΑΡΧΕΙΟ <span>ΤΩΝ ΣΚΙΩΝ</span></h1>
+        <p class="hero-tagline">Κάποιες στιγμές δεν έπρεπε να καταγραφούν.</p>
+        <a class="enter-button" href="#συλλογή">ΜΠΕΣ ΣΤΟ ΑΡΧΕΙΟ <span aria-hidden="true">↘</span></a>
+      </div>
+      <div class="hero-corner hero-corner-one" aria-hidden="true"></div>
+      <div class="hero-corner hero-corner-two" aria-hidden="true"></div>
+    </section>
+
+    <section class="archive-section wrap" id="συλλογή" aria-labelledby="gallery-heading">
+      <div class="archive-header">
+        <div>
+          <p class="section-kicker">I. ΤΑ ΙΧΝΗ</p>
+          <h2 id="gallery-heading">Τα πειστήρια</h2>
+        </div>
+        <div class="archive-status" id="connectionBanner" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="connectionText">ΣΥΝΔΕΣΗ...</span>
+        </div>
+      </div>
+      <div class="gallery-controls">
+        <div class="filterrow" role="group" aria-label="Φίλτρα αρχείων">
+          <button type="button" class="filter active" data-filter="all" aria-pressed="true">Όλα <span id="allFilterCount">0</span></button>
+          <button type="button" class="filter" data-filter="image" aria-pressed="false">Φωτογραφίες <span id="imageFilterCount">0</span></button>
+          <button type="button" class="filter" data-filter="video" aria-pressed="false">Βίντεο <span id="videoFilterCount">0</span></button>
+        </div>
+        <div class="gallery-tools">
+          <label class="searchbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            <input id="search" type="search" placeholder="Αναζήτηση…" aria-label="Αναζήτηση αρχείων">
+          </label>
+          <label class="sort-label"><span class="invisible">Ταξινόμηση</span><select id="sort" class="select"><option value="new">Νεότερα πρώτα</option><option value="old">Παλαιότερα πρώτα</option><option value="name">Με όνομα</option></select></label>
+        </div>
+      </div>
+      <div id="galleryLoading" class="loading" hidden><span class="loading-mark" aria-hidden="true">✦</span> Το αρχείο ανοίγει…</div>
+      <div class="gallery" id="gallery"></div>
+      <div class="more-wrap" id="moreWrap" hidden><button class="more-button" id="loadMore" type="button">ΠΕΡΙΣΣΟΤΕΡΑ ΠΕΙΣΤΗΡΙΑ <span aria-hidden="true">↓</span></button></div>
+      <div class="noresults" id="noresults" hidden>Το αρχείο είναι άδειο.</div>
+    </section>
+  </main>
+
+  <footer class="footer wrap"><span>© 2026 · Το Αρχείο των Σκιών</span><span class="footer-mark" aria-hidden="true">✦</span></footer>
+
+  <dialog class="viewer" id="viewDialog" aria-label="Μεγάλη προβολή αρχείου">
+    <div class="viewer-top"><strong id="viewTitle"></strong><div class="viewer-controls"><button type="button" id="viewDownload">↓ Λήψη</button><button type="button" id="closeViewer" aria-label="Κλείσιμο">✕</button></div></div>
+    <div class="viewer-stage" id="viewerStage"><button class="viewnav viewprev" id="prevBtn" aria-label="Προηγούμενο αρχείο">‹</button><div id="viewerMedia"></div><button class="viewnav viewnext" id="nextBtn" aria-label="Επόμενο αρχείο">›</button></div>
+    <div class="viewer-foot"><span id="viewMeta"></span><span id="viewIndex"></span></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="./config.js"></script>
+  <script defer src="./app.js?v=2"></script>
+</body>
+</html>
