@@ -7,6 +7,7 @@
  * Public writes require Cloudflare Turnstile and encrypted upload sessions.
  */
 const DRIVE = 'https://www.googleapis.com/drive/v3/files';
+const EXPECTED_GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType';
 const CHUNK = 4 * 1024 * 1024;
 const MAX_FILE = 300 * 1024 * 1024;
@@ -53,6 +54,14 @@ async function token(env) {
   });
   const j = await r.json();
   if (!r.ok || !j.access_token) throw Error('GOOGLE_AUTH');
+  // The refresh token must carry only the narrow per-file scope. Fail closed if
+  // an old full-Drive grant is accidentally installed in Cloudflare Secrets.
+  const scopes = new Set(String(j.scope || '').split(/\s+/));
+  if (!scopes.has(EXPECTED_GOOGLE_SCOPE) ||
+      scopes.has('https://www.googleapis.com/auth/drive') ||
+      scopes.has('https://www.googleapis.com/auth/drive.readonly')) {
+    throw Error('GOOGLE_SCOPE');
+  }
   cachedToken = j.access_token;
   tokenExpiry = Date.now() + Math.max(60, Number(j.expires_in || 3600) - 120) * 1000;
   return cachedToken;
@@ -100,6 +109,17 @@ async function streamFile(env, request, id, thumbnail = false) {
   const url = thumbnail && f.thumbnailLink
     ? f.thumbnailLink
     : DRIVE + '/' + urlEncode(id) + '?alt=media&supportsAllDrives=true';
+  // A thumbnailLink from metadata is external input. Never send Google OAuth
+  // bearer credentials to an unexpected host.
+  if (thumbnail && f.thumbnailLink) {
+    const previewUrl = new URL(f.thumbnailLink);
+    const host = previewUrl.hostname.toLowerCase();
+    if (previewUrl.protocol !== 'https:' ||
+        !(host === 'googleusercontent.com' || host.endsWith('.googleusercontent.com') ||
+          host === 'google.com' || host.endsWith('.google.com'))) {
+      return failure('Μη έγκυρη διεύθυνση μικρογραφίας.', 502);
+    }
+  }
   const headers = new Headers();
   const range = request.headers.get('Range');
   if (!thumbnail && range && /^bytes=\d*-\d*$/.test(range)) headers.set('Range', range);
@@ -285,8 +305,8 @@ export default {
         result = await uploadChunk(request,env);
       } else result = failure('Η διαδρομή δεν υπάρχει.',404);
     } catch (error) {
-      result = failure(error?.message === 'GOOGLE_AUTH'
-        ? 'Η Google σύνδεση χρειάζεται επανασύνδεση.' : 'Παρουσιάστηκε σφάλμα στον διακομιστή.',503);
+      result = failure(error?.message === 'GOOGLE_AUTH' || error?.message === 'GOOGLE_SCOPE'
+        ? 'Η Google σύνδεση χρειάζεται drive.file token. Έλεγξε τα Cloudflare Secrets.' : 'Παρουσιάστηκε σφάλμα στον διακομιστή.',503);
     }
     return withCors(result, request, env);
   }
