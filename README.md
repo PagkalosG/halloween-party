@@ -5,7 +5,9 @@
 - The gallery displays **only the photographs and video play icons**: filenames and dates remain searchable/sortable metadata but are not rendered in the cards or lightbox.
 - The old "Μπες στο αρχείο" CTA and "Η νύχτα έχει μνήμη" label were removed.
 - The previous stable interface is preserved indefinitely on branch [`backup-before-cinematic-redesign`](https://github.com/PagkalosG/halloween-party/tree/backup-before-cinematic-redesign). Do not delete it unless the site owner expressly requests deletion.
-- The background is a real architectural photograph by [FELIXFELIX FELIX on Unsplash](https://unsplash.com/photos/creepy-old-building-with-dark-windows-at-night-u5z7TBM-1m4), used under the [Unsplash License](https://unsplash.com/license) and loaded from the Unsplash CDN. If the CDN is unavailable, the dark gradients still render.
+- The full-screen banner uses a real architectural photograph by [Phil Hearing on Unsplash](https://unsplash.com/photos/gothic-building-shrouded-in-fog-at-night-2AbpWRHvun8), under the [Unsplash License](https://unsplash.com/license). Its optimized, color-graded **desktop and mobile WebP files** are checked into `assets/haunted-hero-desktop.webp` and `assets/haunted-hero-mobile.webp`. The live site loads these files locally from GitHub Pages, with no dependency on the Unsplash CDN.
+- Cinematic loader: `intro.js` opens two GPU-transformed fog banks over the photo, revealing the banner title. The overlay always has a bounded timeout, is skipped with `prefers-reduced-motion` and direct links to `#συλλογή`, and is hidden if JavaScript is unavailable. No music/audio is autoplayed.
+- To restore the former interface, use the preserved backup branch rather than modifying the Cloudflare Worker.
 - All Drive API access, cached media URLs, automatic KV sync, photo filters and video playback retain their previous behavior.
 
 
