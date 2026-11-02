@@ -1,5 +1,14 @@
 # Το Αρχείο των Σκιών 🦇 — Read-only Halloween Album
 
+## Cinematic UI (November 2026)
+
+- The gallery displays **only the photographs and video play icons**: filenames and dates remain searchable/sortable metadata but are not rendered in the cards or lightbox.
+- The old "Μπες στο αρχείο" CTA and "Η νύχτα έχει μνήμη" label were removed.
+- The previous stable interface is preserved indefinitely on branch [`backup-before-cinematic-redesign`](https://github.com/PagkalosG/halloween-party/tree/backup-before-cinematic-redesign). Do not delete it unless the site owner expressly requests deletion.
+- The background is a real architectural photograph by [FELIXFELIX FELIX on Unsplash](https://unsplash.com/photos/creepy-old-building-with-dark-windows-at-night-u5z7TBM-1m4), used under the [Unsplash License](https://unsplash.com/license) and loaded from the Unsplash CDN. If the CDN is unavailable, the dark gradients still render.
+- All Drive API access, cached media URLs, automatic KV sync, photo filters and video playback retain their previous behavior.
+
+
 Το Halloween άλμπουμ φιλοξενείται στο **GitHub Pages**, προβάλλει αυτόματα φωτογραφίες και βίντεο από **έναν μόνο φάκελο Google Drive**, και διαβάζει το Drive μέσω **Cloudflare Worker** και **Google Service Account** με δικαιώματα **Viewer** στον συγκεκριμένο φάκελο.
 
 **Δεν υπάρχει uploader, Google Picker, owner.html, write/delete API ή ανάγκη να επιλέγεις φωτογραφίες μία-μία.** Το GitHub Pages είναι δημόσιο σε όποιον έχει link/QR. Μόνο ο ιδιοκτήτης του Drive προσθέτει/αφαιρεί περιεχόμενο μέσα στο Drive.
