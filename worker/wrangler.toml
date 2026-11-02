@@ -7,12 +7,11 @@ keep_vars = true # Preserve Cloudflare Dashboard-managed secrets/bindings
 DRIVE_FOLDER_ID = "1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC"
 FRONTEND_ORIGIN = "https://pagkalosg.github.io"
 
-# The KV binding ALBUM_INDEX is added via Cloudflare Dashboard initially.
-# Once created, record its namespace ID here for reproducible GitHub deploys:
-#
-# [[kv_namespaces]]
-# binding = "ALBUM_INDEX"
-# id = "<namespace-id-from-dashboard>"
+# Cloudflare automatically provisions the ALBUM_INDEX KV namespace on deploy.
+# After the first deployment, check the generated namespace under Bindings.
+# You can pin its generated ID here for deterministic future deployments.
+[[kv_namespaces]]
+binding = "ALBUM_INDEX"
 
 [triggers]
 crons = ["*/5 * * * *"]
