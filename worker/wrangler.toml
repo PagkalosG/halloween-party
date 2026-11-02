@@ -1,17 +1,18 @@
 name = "halloween-party-album-api"
 main = "src/index.js"
-keep_vars = true # Preserve Dashboard-managed variables across GitHub/Wrangler deploys
-compatibility_date = "2026-10-20"
+compatibility_date = "2026-11-02"
+keep_vars = true # Preserve Cloudflare Dashboard-managed secrets/bindings
 
 [vars]
 DRIVE_FOLDER_ID = "1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC"
 FRONTEND_ORIGIN = "https://pagkalosg.github.io"
-UPLOADS_ENABLED = "false" # Change to true only after private-folder and upload tests
 
-[[ratelimits]]
-name = "UPLOAD_LIMITER"
-namespace_id = "1081001"
+# The KV binding ALBUM_INDEX is added via Cloudflare Dashboard initially.
+# Once created, record its namespace ID here for reproducible GitHub deploys:
+#
+# [[kv_namespaces]]
+# binding = "ALBUM_INDEX"
+# id = "<namespace-id-from-dashboard>"
 
-[ratelimits.simple]
-limit = 24
-period = 60
+[triggers]
+crons = ["*/5 * * * *"]
