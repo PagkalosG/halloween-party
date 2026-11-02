@@ -23,7 +23,7 @@ function reply(body, status = 200) {
 const failure = (message, status = 400) => reply({ error:message }, status);
 const frontendOrigin = env => (env.FRONTEND_ORIGIN || 'https://pagkalosg.github.io').replace(/\/$/, '');
 const ready = env => !!(env.DRIVE_FOLDER_ID && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN);
-const canUpload = env => ready(env) && !!(env.TURNSTILE_SECRET && env.TURNSTILE_SITE_KEY && env.UPLOAD_SIGNING_KEY);
+const canUpload = env => ready(env) && env.UPLOADS_ENABLED === 'true' && !!(env.TURNSTILE_SECRET && env.TURNSTILE_SITE_KEY && env.UPLOAD_SIGNING_KEY);
 const fileMime = type => MEDIA_TYPES.has(type);
 const goodId = id => /^[A-Za-z0-9_-]{10,180}$/.test(id || '');
 const urlEncode = encodeURIComponent;
@@ -184,8 +184,15 @@ async function readSmallBody(request) {
   if (Number(request.headers.get('Content-Length') || 0) > 8192) return null;
   try { return await request.json(); } catch { return null; }
 }
+async function withinUploadLimit(env, request, route) {
+  if (!env.UPLOAD_LIMITER) return false; // Fail closed without rate-limiting protection.
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const {success} = await env.UPLOAD_LIMITER.limit({key:route + ':' + ip});
+  return success;
+}
 async function authorize(request, env) {
   if (!canUpload(env)) return failure('Η αποστολή δεν έχει ενεργοποιηθεί.', 503);
+  if (!(await withinUploadLimit(env,request,'grant'))) return failure('Πολλές προσπάθειες αποστολής. Δοκίμασε σε λίγο.', 429);
   const body = await readSmallBody(request);
   if (typeof body?.turnstileToken !== 'string' || body.turnstileToken.length > 2500)
     return failure('Χρειάζεται έλεγχος ασφάλειας.', 400);
@@ -203,6 +210,7 @@ async function authorize(request, env) {
 }
 async function startUpload(request, env) {
   if (!canUpload(env)) return failure('Η αποστολή δεν έχει ενεργοποιηθεί.', 503);
+  if (!(await withinUploadLimit(env,request,'start'))) return failure('Υπερβολικά πολλά αρχεία. Περίμενε λίγο.', 429);
   const data = await readSmallBody(request);
   const grant = await unpack(env, data?.grant);
   const ip = request.headers.get('CF-Connecting-IP') || '';
