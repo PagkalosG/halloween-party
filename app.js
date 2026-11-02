@@ -35,13 +35,9 @@
     $('#videoFilterCount').textContent=videos;
   }
   function render() {
-    const term=$('#search').value.trim().toLocaleLowerCase('el');
     const sort=$('#sort').value;
-    visible=collection.filter(x=>
-      (activeFilter==='all'||x.type===activeFilter) &&
-      x.title.toLocaleLowerCase('el').includes(term));
-    visible.sort((a,b)=>sort==='old'?a.created-b.created:
-      sort==='name'?a.title.localeCompare(b.title,'el'):b.created-a.created);
+    visible=collection.filter(x=>activeFilter==='all'||x.type===activeFilter);
+    visible.sort((a,b)=>sort==='old'?a.created-b.created:b.created-a.created);
     const part=document.createDocumentFragment();
     visible.slice(0,renderLimit).forEach((x,index)=>{
       const card=document.createElement('figure');
@@ -187,7 +183,6 @@
       render();
     });
   }
-  $('#search').addEventListener('input',()=>{renderLimit=96;render();});
   $('#sort').addEventListener('change',()=>{renderLimit=96;render();});
   $('#loadMore').addEventListener('click',()=>{renderLimit+=96;render();});
   async function checkUpdates() {
