@@ -418,7 +418,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
 .cinematic-intro.is-fading{opacity:0;pointer-events:none}
 .intro-backdrop{
   position:absolute;inset:-3%;
-  background:url("./assets/haunted-hero-desktop.webp") center/cover no-repeat;
+  background:url("./assets/gothic-horror-collage.webp") center/cover no-repeat;
   filter:blur(10px) brightness(.47) saturate(.55);
   transform:scale(1.04);
   opacity:.74;
@@ -497,7 +497,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
   .cinema-date{bottom:18px;right:20px;font-size:9px;letter-spacing:.13em}
   .cinema-frame{inset:8px}
   .cinema-bottom-fog{filter:blur(14px);height:22%}
-  .intro-backdrop{background-image:url("./assets/haunted-hero-mobile.webp");background-position:center 40%}
+  .intro-backdrop{background-image:url("./assets/gothic-horror-collage.webp");background-position:center 40%}
   .intro-fog{filter:blur(18px)}
   .intro-fog-low{filter:blur(22px)}
   .intro-sigil{width:54px;height:54px}
@@ -778,4 +778,35 @@ body{isolation:isolate}
 }
 @media(prefers-reduced-motion:reduce){
   .intro-cloud-puff{animation:none!important;transition:none!important;will-change:auto}
+}
+
+/* Photographic anthology collage: preserve all characters on mobile,
+   with a soft full-bleed copy behind the centered, uncropped composition. */
+.cinema-hero{background:#0b1016}
+.cinema-picture{background:#0c1118}
+.cinema-picture img{
+  filter:brightness(.88) contrast(1.13) saturate(.85);
+  object-position:center center;
+}
+.cinema-vignette{
+  background:
+    linear-gradient(180deg,rgba(4,6,9,.08),rgba(4,5,8,.12) 29%,rgba(4,6,8,.20) 63%,#06080c 100%),
+    radial-gradient(ellipse 52% 36% at 50% 53%,rgba(3,4,7,.40),transparent 97%);
+}
+.intro-backdrop{filter:blur(8px) brightness(.59) saturate(.75)}
+.ambient-picture img{filter:brightness(.52) contrast(1.2) saturate(.52)}
+@media(max-width:680px){
+  .cinema-picture::before{
+    content:"";position:absolute;inset:-7%;
+    background:url("./assets/gothic-horror-collage.webp") center/cover no-repeat;
+    filter:blur(19px) brightness(.46) saturate(.65);
+  }
+  .cinema-picture img{
+    object-fit:contain;
+    object-position:center center;
+    filter:brightness(.93) contrast(1.1) saturate(.83);
+  }
+  .cinema-vignette{
+    background:linear-gradient(180deg,rgba(5,5,8,.22),rgba(5,6,9,.15) 47%,rgba(5,5,8,.65) 80%,#080709 100%);
+  }
 }
