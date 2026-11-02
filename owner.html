@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#100b16">
+<title>Διαχείριση Drive · Το Αρχείο των Σκιών</title>
+<style>
+:root{color-scheme:dark; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#110c18;color:#f4e9e8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#382130,#120b18 60%);min-height:100vh}
+main{width:min(760px,calc(100% - 36px));margin:35px auto 80px}h1{font-family:Georgia,serif;font-size:clamp(29px,6vw,46px);color:#e9bfa8;margin:12px 0}h2{font-family:Georgia,serif;color:#e9bfa8}
+p,li{line-height:1.65;color:#d8c8cd}a{color:#f9c6ad}.eyebrow{font-size:12px;letter-spacing:.2em;color:#c5a2a5;text-transform:uppercase}
+.panel{background:#1b1420e8;border:1px solid #5e3a4b;border-radius:17px;margin:18px 0;padding:22px}
+label{display:block;color:#e2c7c8;font-weight:600;margin:15px 0 6px;font-size:14px}input{background:#0e0a13;color:#fff;border:1px solid #6b4d5e;border-radius:9px;width:100%;padding:12px;font:inherit}
+button{cursor:pointer;background:#b56265;color:#fff;border:1px solid #db9b91;border-radius:9px;padding:11px 15px;font:600 14px system-ui;margin:8px 5px 5px 0}
+button.secondary{background:#332330;color:#edd5d7}
+button:disabled{opacity:.4;cursor:not-allowed}
+.notice{border-left:3px solid #c17b70;padding:12px;background:#291b29;color:#ecdada;border-radius:6px}
+code{word-break:break-all;color:#f4d0b4}#status{white-space:pre-wrap;line-height:1.6;color:#f7dfb2;margin:12px 0}
+footer{color:#ab929b;margin:24px 0;font-size:13px}
+</style>
+<script src="./config.js" defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="./owner.js" defer></script>
+</head>
+<body>
+<main>
+<a href="./">← Πίσω στο άλμπουμ</a>
+<p class="eyebrow">Ιδιωτική διαχείριση · Google Picker</p>
+<h1>Το δωμάτιο του διαχειριστή</h1>
+<p>Εδώ δίνεις στην εφαρμογή πρόσβαση <strong>μόνο</strong> στον φάκελο και στα αρχεία που επιλέγεις ο ίδιος, χρησιμοποιώντας το περιορισμένο Google OAuth scope <code>drive.file</code>.</p>
+<div class="notice">Αυτή η σελίδα είναι δημόσια προσπελάσιμη μέσω URL, όχι πάνελ με PIN. Δεν περιέχει κλειδιά πρόσβασης του λογαριασμού. Μόνο ο δικός σου Google λογαριασμός, που έχει προστεθεί ως OAuth test user, πρέπει να δώσει συγκατάθεση. Μην επιλέξεις αρχεία εκτός του άλμπουμ.</div>
+<section class="panel">
+<h2>1. Δημόσια στοιχεία Google Cloud</h2>
+<p>Βρες τα στο project <strong>Halloween Party Album</strong>. Δεν εισάγεις εδώ Client Secret, refresh token ή password.</p>
+<label for="clientId">OAuth Client ID</label>
+<input id="clientId" placeholder="1234567890-xxxx.apps.googleusercontent.com" autocomplete="off">
+<label for="pickerKey">Google Picker API key (περιορισμένο σε domains και API)</label>
+<input id="pickerKey" placeholder="AIza..." autocomplete="off">
+<label for="projectNumber">Google Cloud Project Number (αριθμός)</label>
+<input id="projectNumber" placeholder="123456789012" inputmode="numeric" autocomplete="off">
+<label for="folderId">Google Drive Folder ID</label>
+<input id="folderId" value="1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC" readonly>
+<div><button id="save" type="button" class="secondary">Αποθήκευση ρυθμίσεων στον browser</button></div>
+</section>
+<section class="panel">
+<h2>2. Εξουσιοδότηση φακέλου</h2>
+<p>Πάτησε «Σύνδεση με Google» και επίλεξε το συγκεκριμένο folder από το Google Picker. Το να γνωρίζει η εφαρμογή μόνο το Folder ID δεν της δίνει πρόσβαση στο Drive.</p>
+<button id="googleLogin" type="button">Σύνδεση με Google</button>
+<button id="pickFolder" type="button" class="secondary">Επιλογή φακέλου</button>
+</section>
+<section class="panel">
+<h2>3. Εισαγωγή παλιών φωτογραφιών και βίντεο</h2>
+<p>Επίλεξε όσα υπάρχοντα αρχεία επιθυμείς μέσα από το συγκεκριμένο φάκελο. Η Google δίνει τότε πρόσβαση στην εφαρμογή μόνο για τα επιλεγμένα αρχεία. Νέα uploads από την ιστοσελίδα δεν χρειάζονται αυτή τη διαδικασία.</p>
+<button id="pickFiles" type="button">Εισαγωγή αρχείων με Google Picker</button>
+<button id="checkBackend" type="button" class="secondary">Έλεγχος σύνδεσης Worker</button>
+<p><small>Σημείωση: αν συνδέσεις άλλο Google account από αυτό που χρησιμοποίησες για το refresh token του Worker, η άδεια στα επιλεγμένα αρχεία δεν θα ισχύει για τον Worker.</small></p>
+</section>
+<section class="panel" aria-live="polite">
+<h2>Κατάσταση</h2>
+<div id="status">Πρόσθεσε πρώτα τα δημόσια στοιχεία της Google.</div>
+</section>
+<footer>Τα OAuth access tokens μένουν μόνο στη μνήμη αυτού του browser όσο η σελίδα είναι ανοιχτή. Τα Google refresh tokens αποθηκεύονται μόνο στο Cloudflare ως secrets.</footer>
+</main>
+</body></html>
