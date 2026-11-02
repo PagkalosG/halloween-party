@@ -6,7 +6,6 @@
   const viewDialog = $('#viewDialog');
   const toast = $('#toast');
   const empty = $('#noresults');
-  const banner = $('#connectionBanner');
   const loading = $('#galleryLoading');
   const moreWrap = $('#moreWrap');
   const playSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>';
@@ -27,10 +26,6 @@
     toast.hidden=false;
     clearTimeout(toastTimer);
     toastTimer=setTimeout(()=>{toast.hidden=true;},4500);
-  }
-  function setBanner(message,style='') {
-    $('#connectionText').textContent=message;
-    banner.className='archive-status'+(style?' '+style:'');
   }
   function setCounts() {
     const photos=collection.filter(x=>x.type==='image').length;
@@ -117,14 +112,12 @@
       version=nextVersion;
       modified=true;
       setCounts();
-      setBanner('ΣΥΝΔΕΔΕΜΕΝΟ','online');
       if(!initial && additions>0)notify(
         additions===1?'Μία νέα ανάμνηση προστέθηκε στη συλλογή!':
           additions+' νέες αναμνήσεις προστέθηκαν στη συλλογή!'
       );
     }catch(e){
       if(initial) {
-        setBanner('ΕΚΤΟΣ ΣΥΝΔΕΣΗΣ','error');
         empty.hidden=false;empty.textContent=e.message;
       }
       if(!initial)console.warn('Gallery update:',e.message);
@@ -139,8 +132,6 @@
   function showViewer() {
     const x=visible[currentView];
     if(!x)return;
-    $('#viewMeta').textContent=x.type==='video'?'ΒΙΝΤΕΟ':'ΦΩΤΟΓΡΑΦΙΑ';
-    $('#viewIndex').textContent=(currentView+1)+' / '+visible.length;
     const slot=$('#viewerMedia');slot.replaceChildren();
     if(x.type==='video') {
       const video=document.createElement('video');
@@ -152,12 +143,6 @@
       slot.append(img);
     }
     $('#prevBtn').hidden=$('#nextBtn').hidden=visible.length<2;
-    $('#viewDownload').onclick=()=>{
-      const sep=x.src.includes('?')?'&':'?';
-      const link=document.createElement('a');
-      link.href=x.src+sep+'download=1';link.target='_blank';link.rel='noopener';
-      document.body.append(link);link.click();link.remove();
-    };
   }
   function openViewer(index) {
     currentView=index;
@@ -172,6 +157,10 @@
   $('#prevBtn').addEventListener('click',()=>nextViewer(-1));
   $('#nextBtn').addEventListener('click',()=>nextViewer(1));
   $('#closeViewer').addEventListener('click',()=>viewDialog.close());
+  // Dismiss by tapping the dark canvas around the image; no popup chrome.
+  $('#viewerStage').addEventListener('click',e=>{
+    if(e.target===$('#viewerStage')||e.target===$('#viewerMedia')) viewDialog.close();
+  });
   viewDialog.addEventListener('close',()=>$('#viewerMedia').replaceChildren());
   let touchX=null;
   $('#viewerStage').addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;},{passive:true});
@@ -210,7 +199,6 @@
   }
   async function initialize(){
     if(!apiBase){
-      setBanner('ΕΚΤΟΣ ΣΥΝΔΕΣΗΣ','error');
       empty.hidden=false;empty.textContent='Η υπηρεσία του άλμπουμ δεν έχει ακόμη συνδεθεί.';
       return;
     }
@@ -223,7 +211,6 @@
         if(document.visibilityState==='visible')checkUpdates();
       });
     }catch(e){
-      setBanner('ΕΚΤΟΣ ΣΥΝΔΕΣΗΣ','error');
       empty.hidden=false;empty.textContent=e.message;
     }
   }
