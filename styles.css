@@ -737,3 +737,45 @@ body{isolation:isolate}
   .ambient-picture img,.cinema-picture img{transform:none!important;will-change:auto!important}
   .intro-clouds{animation:none!important}
 }
+
+/* Edition 7: independent, distinct storm-cloud puffs above the fog curtains. */
+.intro-cloud-puff{
+  position:absolute;z-index:4;pointer-events:none;
+  width:clamp(240px,37vw,690px);
+  aspect-ratio:2.2/1;
+  opacity:.89;
+  border-radius:50%;
+  filter:blur(clamp(15px,2vw,32px));
+  background:
+    radial-gradient(ellipse 37% 45% at 23% 56%,rgba(225,226,233,.83),transparent 94%),
+    radial-gradient(ellipse 40% 47% at 46% 33%,rgba(176,187,199,.94),transparent 91%),
+    radial-gradient(ellipse 36% 41% at 70% 56%,rgba(135,151,171,.9),transparent 94%),
+    radial-gradient(ellipse 54% 37% at 50% 82%,rgba(95,108,128,.9),transparent 96%);
+  mix-blend-mode:screen;
+  will-change:transform,opacity;
+  transition:transform 2.3s cubic-bezier(.22,.03,.14,1),opacity 2.15s ease;
+}
+.cloud-puff-1{top:8%;left:-11%;animation:cloud-bank-a 6.8s ease-in-out infinite alternate}
+.cloud-puff-2{top:15%;right:-13%;width:clamp(260px,44vw,780px);animation:cloud-bank-b 7.6s ease-in-out infinite alternate}
+.cloud-puff-3{top:38%;left:15%;width:clamp(260px,39vw,720px);opacity:.81;animation:cloud-bank-c 9.2s ease-in-out infinite alternate}
+.cloud-puff-4{bottom:14%;right:1%;opacity:.79;animation:cloud-bank-b 8.4s ease-in-out infinite alternate-reverse}
+.cloud-puff-5{bottom:-10%;left:-9%;width:clamp(300px,54vw,880px);opacity:.89;animation:cloud-bank-a 9.4s ease-in-out infinite alternate}
+.cinematic-intro.is-opening .cloud-puff-1,
+.cinematic-intro.is-opening .cloud-puff-3,
+.cinematic-intro.is-opening .cloud-puff-5{transform:translate3d(-125vw,-9%,0) scale(1.12);opacity:0;animation:none}
+.cinematic-intro.is-opening .cloud-puff-2,
+.cinematic-intro.is-opening .cloud-puff-4{transform:translate3d(125vw,8%,0) scale(1.12);opacity:0;animation:none}
+@keyframes cloud-bank-a{from{translate:-3% 2%}to{translate:5% -3%}}
+@keyframes cloud-bank-b{from{translate:3% -2%}to{translate:-5% 3%}}
+@keyframes cloud-bank-c{from{translate:-4% -2%}to{translate:4% 4%}}
+@media(max-width:680px){
+  .intro-cloud-puff{width:70vw;filter:blur(17px);opacity:.78}
+  .cloud-puff-1{top:13%;left:-33%}
+  .cloud-puff-2{top:24%;right:-29%;width:85vw}
+  .cloud-puff-3{top:43%;left:0;width:84vw}
+  .cloud-puff-4{bottom:14%;right:-25%}
+  .cloud-puff-5{bottom:1%;left:-26%;width:100vw}
+}
+@media(prefers-reduced-motion:reduce){
+  .intro-cloud-puff{animation:none!important;transition:none!important;will-change:auto}
+}
