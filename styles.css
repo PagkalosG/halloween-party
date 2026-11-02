@@ -673,6 +673,8 @@ body{isolation:isolate}
 
 /* Immersive photo-only viewer. No title bar, border, footer or card frame. */
 .viewer{
+  position:fixed;
+  inset:0;
   width:100vw;
   max-width:100vw;
   height:100dvh;
@@ -727,8 +729,8 @@ body{isolation:isolate}
   .intro-clouds{filter:blur(24px)}
   .intro-fog-low{filter:blur(18px)}
   .ambient-picture{inset:-70px -18%;height:calc(100% + 140px);width:136%}
-  .ambient-picture img{transform:translate3d(0,calc(var(--scene-shift) * .55),0) scale(1.12)}
-  .cinema-picture img{transform:translate3d(0,calc(var(--hero-shift) * .7),0) scale(1.105)}
+  .ambient-picture img{transform:translate3d(0,var(--scene-shift),0) scale(1.12)}
+  .cinema-picture img{transform:translate3d(0,var(--hero-shift),0) scale(1.105)}
   .viewnav,.viewer-close{width:42px;height:42px}
   .viewnav svg,.viewer-close svg{width:20px;height:20px}
   .viewprev{left:8px}.viewnext{right:8px}
