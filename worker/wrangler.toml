@@ -1,0 +1,7 @@
+name = "halloween-party-album-api"
+main = "src/index.js"
+compatibility_date = "2026-10-20"
+
+[vars]
+DRIVE_FOLDER_ID = "1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC"
+FRONTEND_ORIGIN = "https://pagkalosg.github.io"
