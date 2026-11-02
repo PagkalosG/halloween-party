@@ -5,3 +5,12 @@ compatibility_date = "2026-10-20"
 [vars]
 DRIVE_FOLDER_ID = "1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC"
 FRONTEND_ORIGIN = "https://pagkalosg.github.io"
+UPLOADS_ENABLED = "false" # Change to true only after private-folder and upload tests
+
+[[ratelimits]]
+name = "UPLOAD_LIMITER"
+namespace_id = "1081001"
+
+[ratelimits.simple]
+limit = 24
+period = 60
