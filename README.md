@@ -1,127 +1,125 @@
-# Το Αρχείο των Σκιών 🦇
+# Το Αρχείο των Σκιών 🦇 — Read-only Halloween Album
 
-Responsive spooky ψηφιακό άλμπουμ φωτογραφιών και βίντεο. Το frontend φιλοξενείται στο GitHub Pages, το API σε Cloudflare Worker και η αποθήκευση γίνεται στο Google Drive.
+Το Halloween άλμπουμ φιλοξενείται στο **GitHub Pages**, προβάλλει αυτόματα φωτογραφίες και βίντεο από **έναν μόνο φάκελο Google Drive**, και διαβάζει το Drive μέσω **Cloudflare Worker** και **Google Service Account** με δικαιώματα **Viewer** στον συγκεκριμένο φάκελο.
 
-**Ασφάλεια (απόφαση έργου):** Προσωπικός Google λογαριασμός με **ΜΟΝΟ** OAuth scope `https://www.googleapis.com/auth/drive.file`, όχι `https://www.googleapis.com/auth/drive`. Οι καλεσμένοι δεν συνδέονται στη Google. Μπορούν να βλέπουν/ανεβάζουν μέσω του δικού μας API, όχι να διαγράφουν. Το backend ελέγχει ότι κάθε εμφανιζόμενο αρχείο ανήκει **απευθείας** στον επιλεγμένο φάκελο.
+**Δεν υπάρχει uploader, Google Picker, owner.html, write/delete API ή ανάγκη να επιλέγεις φωτογραφίες μία-μία.** Το GitHub Pages είναι δημόσιο σε όποιον έχει link/QR. Μόνο ο ιδιοκτήτης του Drive προσθέτει/αφαιρεί περιεχόμενο μέσα στο Drive.
 
-> ΣΗΜΑΝΤΙΚΟ: Αν κάποιος έχει το URL ή QR μπορεί να δει ό,τι εμφανίζεται στο άλμπουμ, χωρίς login. Τα Cloudflare Secrets δεν φαίνονται στο GitHub. Η επιλογή αρχείων μέσω Google Picker δίνει στην εφαρμογή πρόσβαση μόνο στα συγκεκριμένα επιλεγμένα αρχεία ή σε αρχεία που η εφαρμογή δημιούργησε.
-
-## Υπάρχουσες διευθύνσεις
+## Τι έχει ήδη γίνει
 
 - GitHub repository: https://github.com/PagkalosG/halloween-party
-- Frontend (GitHub Pages): https://pagkalosg.github.io/halloween-party/
-- Φάκελος Google Drive (ID): `1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC`
-- Google Cloud Project name: **Halloween Party Album**
+- Σελίδα: https://pagkalosg.github.io/halloween-party/
+- Cloudflare API: https://halloween-party-album-api.pagkalosgeo.workers.dev
+- Φάκελος Drive: `1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC`
+- Google Cloud project: **Halloween Party Album**
 - Worker name: `halloween-party-album-api`
-- Owner-only setup page: https://pagkalosg.github.io/halloween-party/owner.html
+- GitHub deployment: root directory `worker`, branch `main`, deploy command `npx wrangler deploy`.
+- Ο προηγούμενος OAuth/Google Picker κώδικας καταργήθηκε από το repository.
 
-## 1. Google Cloud (έχεις κάνει ήδη τα βασικά)
+## Αρχιτεκτονική cache και ενημέρωσης
 
-Στο project **Halloween Party Album** έχεις ενεργοποιήσει Drive API, Picker API και έχεις δημιουργήσει Web OAuth Client με Authorized JavaScript Origin `https://pagkalosg.github.io`.
+1. Ο **Cloudflare Cron Trigger** ελέγχει το περιεχόμενο του φάκελου **ανά 5 λεπτά** (`*/5 * * * *`).
+2. Ο Worker διαβάζει όλα τα pages της λίστας αρχείων με **Google Drive files.list** για τον συγκεκριμένο folder ID. Δεν αποθηκεύει τα ίδια τα αρχεία στο KV, μόνο metadata: ID, όνομα, mimeType, μέγεθος, created/modified time, checksum.
+3. Η λίστα συγκρίνεται με το προηγούμενο snapshot. **Μόνο αν αλλάξουν αρχεία**, γράφεται καινούργιο manifest στο **Cloudflare Workers KV** (`ALBUM_INDEX`). Χωρίς αλλαγές, **δεν γίνεται KV write**.
+4. Η σελίδα ζητά ανά 60 δευτερόλεπτα μόνο το ελαφρύ `GET /api/changes?since=<version>`. Αν η έκδοση είναι ίδια, δεν ανανεώνει DOM ούτε επαναφορτώνει εικόνες. Αν αλλάξει, ανακτά το καινούργιο manifest από KV και εμφανίζει τα νέα/ενημερωμένα αρχεία, αφαιρώντας όσα δεν υπάρχουν πια.
+5. **Εικόνες/μικρογραφίες** αποθηκεύονται στο **Cloudflare Cache API** και στο cache του browser για έως **6 ώρες** ανά έκδοση αρχείου. Όταν ένα αρχείο αλλάξει, το URL του περιλαμβάνει νέο `?v=` και δεν επιστρέφεται παλιά έκδοση από την cache.
+6. Τα βίντεο εξυπηρετούνται από το Worker με **HTTP byte range**, για αναπαραγωγή/seek χωρίς αποθήκευση ολόκληρου του βίντεο στην cache. Η ταχύτητα της *πρώτης* αναπαραγωγής βίντεο εξακολουθεί να εξαρτάται από το Drive και τη σύνδεση.
+7. Η Cloudflare KV είναι eventually consistent: συνήθως οι νέες φωτογραφίες εμφανίζονται μέσα σε λίγα λεπτά, όχι στιγμιαία. Ο πρώτος επισκέπτης μπορεί να αρχικοποιήσει το cache αν είναι άδειο.
 
-1. Άνοιξε **Google Auth Platform → Clients** → τον OAuth Web Client σου: https://console.cloud.google.com/auth/clients
-2. Στα **Authorized redirect URIs**, πρόσθεσε ακριβώς: `https://developers.google.com/oauthplayground` και αποθήκευσε. Το `http://localhost:8765/oauth2callback` χρειάζεται μόνο αν επιλέξεις προαιρετικά τον παλιό τοπικό τρόπο.
-3. Στο **Data Access**, χρησιμοποίησε το scope **ΜΟΝΟ** `https://www.googleapis.com/auth/drive.file`. **ΜΗΝ** χρησιμοποιήσεις full `drive` ή `drive.readonly`.
-4. Στο **Audience**, βεβαιώσου ότι ο προσωπικός Google λογαριασμός σου είναι **Test user**, αν το app βρίσκεται σε Testing.
+> Τα cached images μπορεί να παραμένουν τεχνικά προσβάσιμα από παλιό URL μέχρι να λήξει η TTL, ακόμη κι αν τα έχεις αφαιρέσει από το Drive. Το public gallery αφαιρεί τις διαγραμμένες εικόνες μετά το sync. Μην θεωρείς την ιστοσελίδα ιδιωτικό αποθηκευτικό χώρο.
 
-### Google Picker API key
+## Επόμενο Βήμα Α — Δημιουργία Google Service Account, μόνο από browser
 
-Χρειάζεσαι επίσης ένα **API Key** (διαφορετικό από το OAuth Client Secret) που χρησιμοποιείται από το Google Picker μέσα στον browser:
+1. Άνοιξε https://console.cloud.google.com/iam-admin/serviceaccounts στο project **Halloween Party Album**.
+2. Πάτησε **Create Service Account**.
+3. **Service account name:** `halloween-album-reader`.
+4. Πάτησε **Create and Continue**. **Μην προσθέσεις Project IAM roles** (δεν χρειάζεται κανένα Project Editor/Owner/Storage Admin role για να διαβάσει το Drive folder).
+5. Ολοκλήρωσε με **Done**.
+6. Άνοιξε το νέο Service Account → **Keys → Add key → Create new key → JSON**. Η Google θα κατεβάσει ένα JSON αρχείο. **Μην το ανεβάσεις στο GitHub/ChatGPT/Drive folder του πάρτι και μην το δημοσιεύσεις.** Φυλάξ' το ιδιωτικά μέχρι να περαστούν τα Secrets στο Cloudflare. Αν δεν επιτρέπεται δημιουργία key λόγω πολιτικής οργανισμού, σταμάτα εκεί και μην παρακάμψεις την πολιτική.
+7. Αντέγραψε μόνο το πεδίο `client_email` του JSON. Αυτό είναι το τεχνικό email του Service Account. Δεν είναι προσωπικός Gmail λογαριασμός.
 
-1. Άνοιξε https://console.cloud.google.com/apis/credentials με επιλεγμένο το σωστό project.
-2. **Create credentials → API key**.
-3. **Edit API key → Application restrictions → Websites**.
-4. Πρόσθεσε `https://pagkalosg.github.io/*` **και** `https://docs.google.com/*` (απαιτείται επειδή ο Picker εμφανίζεται μέσα σε iframe από το docs.google.com).
-5. **API restrictions → Restrict key → Google Picker API**. Επίλεξε και Drive API μόνο εάν χρησιμοποιείς το API key για απευθείας κλήσεις Drive, κάτι που αυτή η έκδοση δεν κάνει.
+## Επόμενο Βήμα Β — Share του φακέλου ΜΟΝΟ με Viewer access
 
-Θα χρειαστείς τρία **δημόσια** στοιχεία για τη σελίδα `owner.html`: `OAuth Client ID`, `Google Picker API key`, `Project Number` (αριθμός στο project dashboard). Μην εισάγεις εκεί Client Secret ή Refresh Token. Ούτε το Worker API URL είναι μυστικό.
+1. Άνοιξε τον υπάρχοντα folder: https://drive.google.com/drive/folders/1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC
+2. Share → πρόσθεσε το `client_email` του Service Account.
+3. Role **Viewer / Αναγνώστης**. ΜΗΝ δώσεις Editor.
+4. Ο φάκελος μπορεί να παραμείνει **Restricted**. **ΜΗΝ κάνεις Anyone with the link** στο Drive.
+5. Κάνε Share/Send. Το Service Account θα κληρονομεί δικαίωμα ανάγνωσης στις φωτογραφίες/βίντεο που υπάρχουν **απευθείας στον φάκελο**, συμπεριλαμβανομένων νέων αρχείων (εφόσον η κληρονομικότητα δικαιωμάτων ισχύει για το συγκεκριμένο αρχείο).
 
-## 2. Browser-only OAuth (χωρίς PowerShell)
+Η πρόσβαση του Service Account στο Drive δεν είναι Project IAM role: παραχωρείται **μόνο μέσω του Share του συγκεκριμένου Drive folder**.
 
-**Προτεινόμενος τρόπος για αυτό το project:** το επίσημο [Google OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) με **δικό σου OAuth Web Client**. Δεν απαιτεί εγκατάσταση προγραμμάτων ούτε τοπικό terminal.
+## Επόμενο Βήμα Γ — Cloudflare Runtime Secrets
 
-> Σημαντικό για την ασφάλεια: το OAuth Playground είναι υπηρεσία της Google. Όταν επιλέξεις "Use your own OAuth credentials", το Client ID και το Client Secret μεταφέρονται στους servers της Google για την ανταλλαγή του OAuth code. Μην το χρησιμοποιήσεις αν δεν θέλεις να γίνει αυτό. Με δικό σου Client ID/Secret το Playground δεν ανακαλεί αυτομάτως το refresh token σε 24 ώρες (αλλά ισχύουν οι υπόλοιποι κανόνες λήξης της Google).
+Cloudflare → Workers & Pages → `halloween-party-album-api` → **Settings → Runtime variables and secrets → Production → Add variable**.
 
-1. Google Cloud → **Google Auth Platform → Clients** → επίλεξε το Web OAuth Client του project **Halloween Party Album**.
-2. Στο **Authorized redirect URIs** πρόσθεσε **ακριβώς** `https://developers.google.com/oauthplayground`. Save. Μπορείς να κρατήσεις το προηγούμενο localhost URI, δεν χρειάζεται να το χρησιμοποιήσεις.
-3. Άνοιξε https://developers.google.com/oauthplayground/ και πάτησε **το γρανάζι επάνω δεξιά**.
-4. Ρύθμισε **OAuth flow: Server-side**, **Access type: Offline**, **Force prompt: Consent Screen**. Ενεργοποίησε **Use your own OAuth credentials** και συμπλήρωσε εκεί το **Client ID** και **Client Secret** (ΟΧΙ στη συνομιλία ή στο repository).
-5. Στο **Step 1 → Input your own scopes** επικόλλησε **ΜΟΝΟ** `https://www.googleapis.com/auth/drive.file`. Πάτησε **Authorize APIs**.
-6. Επίλεξε τον ίδιο προσωπικό Google λογαριασμό που έχει τον φάκελο Halloween και επιβεβαίωσε το ζητούμενο scope. **Μην παραχωρήσεις πλήρη πρόσβαση Drive.**
-7. Στο **Step 2** πάτησε **Exchange authorization code for tokens**. Αν ολοκληρωθεί επιτυχώς, θα εμφανιστεί το **Refresh token**. Κράτησέ το προσωρινά ιδιωτικό, για να το περάσεις στο Cloudflare Secret `GOOGLE_REFRESH_TOKEN`. Μην το στείλεις σε chat, GitHub ή screenshot.
+Πρόσθεσε ως **Secret**:
 
-> **OAuth Testing:** Για External apps σε Testing τα refresh tokens λήγουν συνήθως μετά από 7 ημέρες. Πριν από πραγματική χρήση, ρύθμισε την κατάσταση δημοσίευσης (Audience) και έλεγξε τις απαιτήσεις Google verification. Μετά από scope/consent αλλαγές, ενδέχεται να χρειαστεί νέο token.
+| Όνομα | Τιμή (ΜΗΝ τη στείλεις στη συνομιλία) |
+|---|---|
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `client_email` από το JSON |
+| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | `private_key` από το JSON, πλήρες PEM (`-----BEGIN PRIVATE KEY-----` κ.λπ.) |
 
-## 3. Cloudflare Worker μέσω Dashboard και GitHub (χωρίς PowerShell)
+Το `private_key` μπορεί να επικολληθεί με κανονικές αλλαγές γραμμής ή με `\\n` από το JSON. **ΜΗΝ επικολλήσεις ολόκληρο το JSON**, ούτε το `private_key_id`/όλα τα υπόλοιπα. Πάτησε **Deploy**.
 
-1. Στον ίδιο Cloudflare λογαριασμό του Atlas άνοιξε https://dash.cloudflare.com/ → **Workers & Pages → Create application** → επέλεξε **GitHub**.
-2. Εξουσιοδότησε (αν ζητηθεί) τη σύνδεση GitHub και επίλεξε `PagkalosG/halloween-party`.
-3. Όρισε **Worker name**: `halloween-party-album-api` — πρέπει να ταιριάζει ακριβώς με το `name` στο `worker/wrangler.toml`.
-4. **Root directory / Project path**: `worker` (όχι η ρίζα του repository). **Production branch**: `main`. **Build command**: κενό εφόσον επιτρέπεται, γιατί δεν απαιτείται μεταγλώττιση. **Deploy command**: `npx wrangler deploy`.
-5. Πάτησε **Save and Deploy**. Η πρώτη έκδοση χωρίς secrets θα πρέπει να επιστρέφει στο `/api/config` κατάσταση `ready:false`. Τα uploads παραμένουν κλειστά.
-6. Στον νέο Worker → **Settings → Variables and Secrets** πρόσθεσε ακριβώς τα παρακάτω ως **Secret**:
-   - `GOOGLE_CLIENT_ID`: το OAuth Client ID
-   - `GOOGLE_CLIENT_SECRET`: το OAuth Client Secret
-   - `GOOGLE_REFRESH_TOKEN`: το Refresh token από το επίσημο Google Playground
-   - `UPLOAD_SIGNING_KEY`: τυχαίο κλειδί τουλάχιστον 32 bytes (φτιάξ' το με password generator, ποτέ μην το κοινοποιήσεις)
-   - `TURNSTILE_SITE_KEY`: το δημόσιο site key του Turnstile
-   - `TURNSTILE_SECRET`: το μυστικό key του Turnstile
-7. Το Turnstile δημιουργείται από Cloudflare Dashboard → **Turnstile**, για το hostname `pagkalosg.github.io`. Μην ενεργοποιήσεις uploads μέχρι να έχουμε ελέγξει το album.
+Ο Worker χρησιμοποιεί μόνο scope `https://www.googleapis.com/auth/drive.readonly` και υπογράφει JWT ως Service Account. Τα δικαιώματα του Service Account καθορίζονται επιπλέον από το Share του συγκεκριμένου Drive folder.
 
-**Public variables** που ορίζονται ήδη στο `worker/wrangler.toml`:
-- `DRIVE_FOLDER_ID = "1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC"`
-- `FRONTEND_ORIGIN = "https://pagkalosg.github.io"`
-- `UPLOADS_ENABLED = "false"` — κλειστό μέχρι τις δοκιμές.
-- `UPLOAD_LIMITER` — Cloudflare Rate Limiting binding.
+**Παλιά Secrets που πρέπει να αφαιρεθούν ΑΦΟΥ η νέα σύνδεση λειτουργήσει:**
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REFRESH_TOKEN`
+- `UPLOAD_SIGNING_KEY`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET` (αν υπάρχουν)
 
-Η ρύθμιση **rate limiting** χρησιμοποιεί το `[[ratelimits]]` του Wrangler (24 προσπάθειες / 60 δευτερόλεπτα ανά κλειδί, κατά προσέγγιση και ανά Cloudflare location). Αν ο Cloudflare λογαριασμός ή η έκδοση της πλατφόρμας δεν υποστηρίζει το binding, **μην το αφαιρέσεις απλώς για να δουλέψουν τα uploads**: ο Worker αποτυγχάνει με ασφαλή τρόπο όταν λείπει.
+Αφαίρεσέ τα **και από Runtime και από Builds → Variables and secrets**, εφόσον είχαν τοποθετηθεί εκεί. Στη Google, ανάκλησε και την παλιά OAuth πρόσβαση της εφαρμογής, από τις ρυθμίσεις πρόσβασης τρίτων του Google Account, **αφού επιβεβαιώσεις** τη λειτουργία του Service Account. Δεν χρειάζεται πλέον Refresh Token/Google Picker ή OAuth Playground.
 
-Το Worker χρησιμοποιεί κρυπτογραφημένα AES-GCM upload session tokens — οι Google resumable upload URLs δεν δημοσιεύονται ως απλό κείμενο στον browser.
+## Επόμενο Βήμα Δ — Cloudflare KV cache
 
-Μόλις δημοσιευτεί, κράτησε **μόνο τη δημόσια διεύθυνση** `https://halloween-party-album-api.<subdomain>.workers.dev`. Μπορείς να τη στείλεις στη συνομιλία για να ενημερώσουμε το `config.js` μέσω GitHub. **Μη στείλεις κανένα OAuth ή Turnstile Secret.**
+Στο `worker/wrangler.toml` υπάρχουν ήδη:
 
-Η εξουσιοδότηση ενός folder και των επιλεγμένων υπαρχόντων αρχείων από το `drive.file` γίνεται στη σελίδα `owner.html` όπως περιγράφεται παρακάτω.
+```toml
+[[kv_namespaces]]
+binding = "ALBUM_INDEX"
 
-## 4. Google Picker: παραχώρηση πρόσβασης μόνο σε συγκεκριμένα αρχεία
+[triggers]
+crons = ["*/5 * * * *"]
+```
 
-Άνοιξε https://pagkalosg.github.io/halloween-party/owner.html
+Η Cloudflare υποστηρίζει **automatic provisioning** του KV όταν το Wrangler deploy γίνεται μέσω GitHub χωρίς namespace ID. Μετά το deploy:
 
-1. Συμπλήρωσε **OAuth Client ID, περιορισμένο Picker API Key, Google Cloud Project Number** και πάτησε «Αποθήκευση». Αυτά τα δημόσια στοιχεία αποθηκεύονται μόνο στο localStorage του browser.
-2. «Σύνδεση με Google» → συνδέσου στον **ίδιο** Google λογαριασμό που χρησιμοποίησες για το refresh token.
-3. «Επιλογή φακέλου» → επίλεξε **ακριβώς** τον φάκελο Halloween. Αυτό παραχωρεί στην εφαρμογή πρόσβαση στον φάκελο μέσω `drive.file`.
-4. «Εισαγωγή αρχείων με Google Picker» → επέλεξε τις υπάρχουσες φωτογραφίες/βίντεο **που βρίσκονται απευθείας στον φάκελο**. Η εφαρμογή λαμβάνει άδεια μόνο για τα επιλεγμένα αρχεία.
-5. «Έλεγχος σύνδεσης Worker»: πρέπει να εμφανίζει ότι ο φάκελος είναι προσβάσιμος.
+1. Cloudflare → `halloween-party-album-api` → **Settings → Bindings**, έλεγξε ότι υπάρχει **KV Namespace** με όνομα binding `ALBUM_INDEX`.
+2. Αν δεν δημιουργήθηκε αυτόματα, δημιούργησε namespace από Cloudflare **Storage & databases → KV → Create namespace** με όνομα `halloween-party-album-index`, και σύνδεσέ το στον Worker από **Settings → Bindings → Add → KV Namespace**, Variable name `ALBUM_INDEX`.
+3. Αν δημιουργήσεις/επιλέξεις χειροκίνητα namespace, κράτησε το Namespace ID (δεν είναι secret), για να το βάλουμε και στο `wrangler.toml` ώστε μελλοντικά deployments να παραμένουν συνδεδεμένα στο ίδιο KV.
+4. Στα Triggers του Worker, επιβεβαίωσε ότι υπάρχει Cron **κάθε 5 λεπτά**.
 
-**Δεν υπάρχει αυτόματη πρόσβαση σε κάθε αρχείο που θα βάλεις απευθείας στο Drive στο μέλλον**. Αν το προσθέσεις χειροκίνητα, ξαναπάτησε «Εισαγωγή» για εκείνο το αρχείο. Αρχεία που ανεβάζουν οι καλεσμένοι μέσω της ιστοσελίδας δημιουργούνται από την εφαρμογή και θα είναι διαθέσιμα χωρίς Picker.
+Το cache κρατά **metadata, όχι πρωτότυπα αρχεία**. Τα πρωτότυπα μένουν στο Drive. Οι εικόνες cache-άρονται στο Cloudflare edge μέσω Cache API ανά data center.
 
-Η owner.html είναι δημόσια διεύθυνση από πλευράς web hosting, αλλά δεν προσφέρει από μόνη της πρόσβαση στο Drive: το Google Picker απαιτεί ατομική Google συγκατάθεση. Μη χρησιμοποιείς αυτή τη σελίδα για διαχείριση άλλου λογαριασμού.
+## Έλεγχος λειτουργίας
 
-## 5. Ενεργοποίηση uploads μόνο μετά τις δοκιμές
+Αφού έχεις Viewer Share, 2 νέα Secrets και KV:
 
-Πρώτα επιβεβαίωσε:
-- `GET /api/config` → `ready:true`, `uploadsEnabled:false`.
-- `GET /api/folder-access` → `folderAccessible:true`.
-- Η ιστοσελίδα φορτώνει επιλεγμένες φωτογραφίες και βίντεο.
-- Έχεις δημιουργήσει Turnstile widget με σωστό hostname και έχεις περάσει τα site/secret keys στον Worker. Το ίδιο το challenge ελέγχεται **μόνο όταν ενεργοποιήσουμε δοκιμαστικά** τα uploads.
+- `GET https://halloween-party-album-api.pagkalosgeo.workers.dev/api/config` πρέπει να επιστρέφει `ready:true`, `readOnly:true`, `uploadsEnabled:false`, `cacheEnabled:true`.
+- `GET https://halloween-party-album-api.pagkalosgeo.workers.dev/api/folder-access` πρέπει να επιστρέφει `folderAccessible:true`.
+- `GET https://halloween-party-album-api.pagkalosgeo.workers.dev/api/items` πρέπει να επιστρέφει `items:[...]` από τον φάκελο.
+- Η gallery στη διεύθυνση https://pagkalosg.github.io/halloween-party/ πρέπει να δείχνει φωτογραφίες/βίντεο.
+- Το `GET /api/changes?since=<version>` επιστρέφει `changed:false` μέχρι να βρεθεί πραγματική αλλαγή.
+- Πρόσθεσε 1 φωτογραφία χειροκίνητα στο Drive, περίμενε το sync, και έλεγξε ότι προστίθεται στη gallery χωρίς refresh. Διέγραψε άλλη δοκιμαστική φωτογραφία, επιβεβαίωσε ότι αφαιρείται από τη λίστα.
+- Δοκίμασε MP4 video σε κινητό και κάνε seek. MOV/HEVC μπορεί να μην υποστηρίζεται στον browser· για γενική συμβατότητα χρησιμοποίησε MP4/H.264.
+- Όλα τα POST/PUT/DELETE endpoints απαντούν `405`. Δεν υπάρχει uploader, Google Picker ή owner page.
 
-Έπειτα άλλαξε στο `worker/wrangler.toml` το `UPLOADS_ENABLED = "false"` σε `"true"` και κάνε νέο `npx wrangler deploy`. Τότε `/api/config` πρέπει να δίνει `uploadsEnabled:true`. Έλεγξε μία μικρή φωτογραφία και ένα μικρό MP4 πριν τα μεγάλα uploads.
+## Ασφάλεια και κόστη
 
-## Λειτουργίες και περιορισμοί
+- Ο φάκελος παραμένει Restricted, με πρόσβαση μόνο του ιδιοκτήτη και του Service Account Viewer.
+- Προσθήκη/διαγραφή αρχείων γίνεται **μόνο απευθείας στο Drive** από τον ιδιοκτήτη.
+- Τα Google Service Account Keys είναι εξαιρετικά ευαίσθητα. Μην τα ανεβάζεις στο GitHub ούτε σε chat. Αποθήκευσε το κλειδί ως Cloudflare Runtime Secret, φρόντισε για τη δυνατότητα ανάκλησης/rotation στο Google Cloud.
+- Οι επισκέπτες δεν αποκτούν Google credentials και δεν έχουν πρόσβαση στο Google Drive interface.
+- Η δημόσια ιστοσελίδα σημαίνει ότι όποιος έχει το link/QR μπορεί να δει τα αρχεία, και μπορεί να προωθήσει το link. Ο cache χρόνος των εικόνων είναι έως 6 ώρες.
+- Το KV/Cache/Workers έχουν όρια και ενδεχόμενες χρεώσεις ανάλογα με το plan, τη χρήση και το πλήθος των αρχείων. Έλεγξε τα quotas πριν το μοιράσεις σε πολύ κόσμο.
+- Ο φάκελος **δεν σαρώνεται αναδρομικά**. Τα αρχεία πρέπει να βρίσκονται απευθείας σε αυτόν.
 
-- Mobile-first gallery, φωτογραφίες/βίντεο, αναζήτηση, ταξινόμηση, lightbox, swipe.
-- Νέες φωτογραφίες εμφανίζονται περίπου κάθε 45 δευτερόλεπτα χωρίς reload.
-- Resumable uploads με chunks 4 MiB, μέγιστο 300 MB/αρχείο, φωτογραφίες και συγκεκριμένοι τύποι βίντεο.
-- Τα βίντεο `.mov`/HEVC μπορεί να μην αναπαράγονται σε όλους τους browsers, χωρίς μετατροπή σε MP4/H.264.
-- Δεν υπάρχει endpoint διαγραφής/τροποποίησης για επισκέπτες.
-- **Όποιος έχει link/QR βλέπει τη συλλογή**. Δεν είναι ιδιωτικό άλμπουμ με identity verification.
-- Δεν υπάρχει ακόμα strict daily upload quota, antivirus scanning ή moderation. Τα Cloudflare rate limits είναι κατά προσέγγιση και δεν εξασφαλίζουν απόλυτη προστασία από κακόβουλο άνθρωπο. Προτείνεται upload window περιορισμένο στη διάρκεια/λίγο μετά το πάρτι και τακτικός έλεγχος αποθηκευτικού χώρου.
-- Δεν έχουν διαβιβαστεί Google OAuth Secrets στη συνομιλία ή στο GitHub.
+## Πηγαίος κώδικας
 
-## Αν κάτι πάει στραβά
+- `index.html`, `app.js`, `styles.css`: gallery.
+- `worker/src/index.js`: read-only Worker με Cloudflare KV και Cache API.
+- `worker/wrangler.toml`: schedule/bindings.
+- `worker/tests/security.test.mjs`: tests για απαγόρευση εγγραφής και CORS.
+- `.github/workflows/album-tests.yml`: GitHub Actions smoke tests.
 
-- `ready:false`: λείπουν Google Secrets από τον Worker.
-- `folderAccessible:false`: επέλεξε τον φάκελο με Google Picker, έλεγξε τον λογαριασμό και το OAuth Client ID.
-- Δεν εμφανίζονται υπάρχουσες φωτογραφίες: διάλεξέ τις ξεχωριστά μέσω Picker, όχι μόνο τον φάκελο.
-- `GOOGLE_AUTH`: το refresh token είναι άκυρο/έληξε, πιθανό λόγω OAuth Testing.
-- `redirect_uri_mismatch`: έλεγξε ακριβώς `http://localhost:8765/oauth2callback` στον OAuth Web Client.
-- Αν λήξει ή διαρρεύσει token: ανάκληση από τη Google, δημιουργία νέου, ενημέρωση Worker Secret.
+Οι ρυθμίσεις που γίνονται χειροκίνητα στο Cloudflare δεν αλλάζουν το περιεχόμενο του Google Drive. Το deployment γίνεται αυτόματα από GitHub.
