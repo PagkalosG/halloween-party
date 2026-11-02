@@ -1,13 +1,17 @@
-name: Album security smoke tests
+name: Album security and frontend smoke tests
 on:
   push:
     branches: [main]
     paths:
       - 'worker/**'
+      - 'app.js'
+      - 'index.html'
       - '.github/workflows/album-tests.yml'
   pull_request:
     paths:
       - 'worker/**'
+      - 'app.js'
+      - 'index.html'
       - '.github/workflows/album-tests.yml'
 jobs:
   test:
@@ -19,6 +23,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Security tests
+      - name: Validate JavaScript syntax
+        run: |
+          node --check app.js
+          node --check worker/src/index.js
+      - name: Reject obsolete upload and owner UI
+        run: |
+          test ! -e owner.html
+          test ! -e owner.js
+          if grep -E -q 'id="(uploadDialog|navUpload|heroUpload|bottomUpload|startUpload)"' index.html; then
+            echo "Obsolete uploader UI detected"
+            exit 1
+          fi
+      - name: Worker security smoke tests
         working-directory: worker
         run: npm test
