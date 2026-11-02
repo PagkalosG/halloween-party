@@ -283,8 +283,18 @@ export default {
     let result;
     try {
       if (url.pathname === '/api/config' && request.method === 'GET') {
-        result = reply({ready:ready(env),uploadsEnabled:canUpload(env),
-          turnstileSiteKey:canUpload(env)?env.TURNSTILE_SITE_KEY:null,maxFileBytes:MAX_FILE});
+        // Temporary configuration diagnostics: disclose NAMES of missing bindings,
+        // never credential values. This also identifies stale deployments.
+        const missingBindings = ['DRIVE_FOLDER_ID', 'GOOGLE_CLIENT_ID',
+          'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN']
+          .filter(name => typeof env[name] !== 'string' || !env[name].trim());
+        result = reply({
+          ready: ready(env), uploadsEnabled: canUpload(env),
+          turnstileSiteKey: canUpload(env) ? env.TURNSTILE_SITE_KEY : null,
+          maxFileBytes: MAX_FILE,
+          diagnosticVersion: '2026-11-02-credentials-check',
+          missingBindings
+        });
       } else if (!ready(env)) {
         result = failure('Το Google Drive δεν έχει εξουσιοδοτηθεί ακόμη.', 503);
       } else if (url.pathname === '/api/folder-access' && request.method === 'GET') {
