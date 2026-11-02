@@ -1,0 +1,24 @@
+name: Album security smoke tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/album-tests.yml'
+  pull_request:
+    paths:
+      - 'worker/**'
+      - '.github/workflows/album-tests.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Security tests
+        working-directory: worker
+        run: npm test
