@@ -41,15 +41,15 @@ jobs:
             echo "Obsolete uploader UI detected"
             exit 1
           fi
-      - name: Verify responsive photographic hero assets
+      - name: Verify custom horror collage and drifting cloud layers
         run: |
-          test -s assets/haunted-hero-desktop.webp
-          test -s assets/haunted-hero-mobile.webp
-          test "$(wc -c < assets/haunted-hero-desktop.webp)" -lt 950000
-          test "$(wc -c < assets/haunted-hero-mobile.webp)" -lt 950000
+          test -s assets/gothic-horror-collage.webp
+          test "$(wc -c < assets/gothic-horror-collage.webp)" -lt 950000
+          grep -q 'assets/gothic-horror-collage.webp' index.html
           grep -q 'id="cinematicIntro"' index.html
           grep -q 'src="./intro.js?v=2"' index.html
           grep -q 'id="ambientBackdrop"' index.html
+          grep -q 'class="intro-cloud-puff cloud-puff-5"' index.html
           grep -q 'id="introSkip"' index.html
       - name: Worker security smoke tests
         working-directory: worker
