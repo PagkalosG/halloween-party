@@ -129,7 +129,7 @@ window.SHADOW_ALBUM_CONFIG = {
 - `GET /api/config` → `ready:true`, `uploadsEnabled:false`.
 - `GET /api/folder-access` → `folderAccessible:true`.
 - Η ιστοσελίδα φορτώνει επιλεγμένες φωτογραφίες και βίντεο.
-- Το Turnstile λειτουργεί στη σελίδα χωρίς σφάλματα.
+- Έχεις δημιουργήσει Turnstile widget με σωστό hostname και έχεις περάσει τα site/secret keys στον Worker. Το ίδιο το challenge ελέγχεται **μόνο όταν ενεργοποιήσουμε δοκιμαστικά** τα uploads.
 
 Έπειτα άλλαξε στο `worker/wrangler.toml` το `UPLOADS_ENABLED = "false"` σε `"true"` και κάνε νέο `npx wrangler deploy`. Τότε `/api/config` πρέπει να δίνει `uploadsEnabled:true`. Έλεγξε μία μικρή φωτογραφία και ένα μικρό MP4 πριν τα μεγάλα uploads.
 
