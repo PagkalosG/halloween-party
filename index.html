@@ -9,8 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="preconnect" href="https://images.unsplash.com">
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="preload" as="image" href="./assets/haunted-hero-desktop.webp" media="(min-width: 681px)" fetchpriority="high">
+  <link rel="preload" as="image" href="./assets/haunted-hero-mobile.webp" media="(max-width: 680px)" fetchpriority="high">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <div class="screen-grain" aria-hidden="true"></div>
@@ -28,34 +29,41 @@
     <a class="topbar-archive" href="#συλλογή" aria-label="Μετάβαση στη συλλογή">Η ΣΥΛΛΟΓΗ <span aria-hidden="true">↓</span></a>
   </header>
 
-  <main id="αρχή">
-    <section class="hero wrap" aria-labelledby="main-title">
-      <div class="hero-image" aria-hidden="true"></div>
-      <div class="hero-tint" aria-hidden="true"></div>
-      <div class="hero-mist hero-mist-one" aria-hidden="true"></div>
-      <div class="hero-mist hero-mist-two" aria-hidden="true"></div>
-      <div class="hero-frame" aria-hidden="true"></div>
-      <div class="hero-web hero-web-left" aria-hidden="true"></div>
-      <div class="hero-web hero-web-right" aria-hidden="true"></div>
-      <div class="hero-embers" aria-hidden="true"></div>
 
-      <div class="hero-content">
-        <div class="hero-mark" aria-hidden="true">
-          <span class="rule"></span>
-          <svg viewBox="0 0 52 52" fill="none">
-            <circle cx="26" cy="26" r="20" stroke="currentColor" stroke-width="1"/>
-            <circle cx="26" cy="26" r="15.5" stroke="currentColor" stroke-width=".5" opacity=".6"/>
-            <path d="M26 9 41 36H11L26 9Z" stroke="currentColor" stroke-width="1"/>
-            <path d="M26 42 11 16h30L26 42Z" stroke="currentColor" stroke-width="1"/>
-            <circle cx="26" cy="26" r="3" fill="currentColor"/>
-          </svg>
-          <span class="rule"></span>
-        </div>
+  <!-- Short one-time cinematic opening. Hidden when JS is disabled/reduced motion. -->
+  <div class="cinematic-intro" id="cinematicIntro" hidden aria-hidden="true">
+    <div class="intro-backdrop"></div>
+    <div class="intro-dark"></div>
+    <div class="intro-fog intro-fog-left"></div>
+    <div class="intro-fog intro-fog-right"></div>
+    <div class="intro-fog intro-fog-low"></div>
+    <div class="intro-sigil" aria-hidden="true">
+      <svg viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="42" cy="42" r="33" stroke="currentColor" stroke-width="1"/>
+        <circle cx="42" cy="42" r="25" stroke="currentColor" stroke-width=".55" opacity=".7"/>
+        <path d="m42 12 27 48H15L42 12Z M42 71 15 23h54L42 71Z" stroke="currentColor" stroke-width=".8"/>
+        <circle cx="42" cy="42" r="4.2" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <main id="αρχή">
+    <section class="cinema-hero wrap" aria-labelledby="main-title">
+      <picture class="cinema-picture" aria-hidden="true">
+        <source media="(max-width: 680px)" srcset="./assets/haunted-hero-mobile.webp">
+        <img id="cinemaHeroImage" src="./assets/haunted-hero-desktop.webp" alt="" width="1800" height="1050" decoding="async" fetchpriority="high">
+      </picture>
+      <div class="cinema-vignette" aria-hidden="true"></div>
+      <div class="cinema-red-glow" aria-hidden="true"></div>
+      <div class="cinema-bottom-fog" aria-hidden="true"></div>
+      <div class="cinema-frame" aria-hidden="true"></div>
+      <div class="cinema-title">
+        <span class="cinema-emblem" aria-hidden="true">✦</span>
         <h1 id="main-title">ΤΟ ΑΡΧΕΙΟ <span>ΤΩΝ ΣΚΙΩΝ</span></h1>
-        <p class="hero-subtitle">Κάποιες στιγμές δεν έπρεπε να καταγραφούν.</p>
-        <div class="hero-flourish" aria-hidden="true"><span></span>✦<span></span></div>
+        <p>Κάποιες στιγμές δεν έπρεπε να καταγραφούν.</p>
+        <span class="cinema-divider" aria-hidden="true"><i></i>✣<i></i></span>
       </div>
-      <div class="hero-stamp" aria-hidden="true">31 · 10 · 2026</div>
+      <span class="cinema-date" aria-hidden="true">31 · 10 · 2026</span>
     </section>
 
     <section class="archive wrap" id="συλλογή" aria-labelledby="gallery-heading">
@@ -114,6 +122,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="./config.js"></script>
-  <script defer src="./app.js?v=3"></script>
+  <script defer src="./intro.js?v=1"></script>
+  <script defer src="./app.js?v=4"></script>
 </body>
 </html>
