@@ -84,10 +84,7 @@
           <span class="heading-ornament" aria-hidden="true">✣</span>
           <h2 id="gallery-heading">Τα πειστήρια</h2>
         </div>
-        <div class="archive-status" id="connectionBanner" role="status" aria-live="polite">
-          <span class="status-dot" aria-hidden="true"></span>
-          <span id="connectionText">ΣΥΝΔΕΣΗ...</span>
-        </div>
+
       </header>
 
       <div class="gallery-controls">
@@ -116,20 +113,20 @@
 
   <footer class="footer wrap"><span>© 2026 · Το Αρχείο των Σκιών</span><span class="footer-symbol" aria-hidden="true">✦</span></footer>
 
-  <dialog class="viewer" id="viewDialog" aria-label="Μεγάλη προβολή αρχείου">
-    <div class="viewer-top">
-      <div class="viewer-label"><span class="viewer-label-symbol" aria-hidden="true">◈</span><span id="viewMeta">Προβολή</span></div>
-      <div class="viewer-controls">
-        <button type="button" id="viewDownload" aria-label="Λήψη αρχείου">↓ Λήψη</button>
-        <button type="button" id="closeViewer" aria-label="Κλείσιμο">✕</button>
-      </div>
-    </div>
+  <!-- Immersive, edge-to-edge viewer: just the media and native-style arrows. -->
+  <dialog class="viewer" id="viewDialog" aria-label="Πλήρης προβολή φωτογραφίας ή βίντεο">
     <div class="viewer-stage" id="viewerStage">
-      <button class="viewnav viewprev" id="prevBtn" aria-label="Προηγούμενο αρχείο">‹</button>
+      <button type="button" class="viewer-close" id="closeViewer" aria-label="Κλείσιμο προβολής">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+      <button type="button" class="viewnav viewprev" id="prevBtn" aria-label="Προηγούμενο αρχείο">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+      </button>
       <div id="viewerMedia"></div>
-      <button class="viewnav viewnext" id="nextBtn" aria-label="Επόμενο αρχείο">›</button>
+      <button type="button" class="viewnav viewnext" id="nextBtn" aria-label="Επόμενο αρχείο">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
     </div>
-    <div class="viewer-foot"><span>ΤΟ ΑΡΧΕΙΟ ΤΩΝ ΣΚΙΩΝ</span><span id="viewIndex"></span></div>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
