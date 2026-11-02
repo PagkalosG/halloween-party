@@ -20,7 +20,7 @@ Responsive spooky ψηφιακό άλμπουμ φωτογραφιών και β
 Στο project **Halloween Party Album** έχεις ενεργοποιήσει Drive API, Picker API και έχεις δημιουργήσει Web OAuth Client με Authorized JavaScript Origin `https://pagkalosg.github.io`.
 
 1. Άνοιξε **Google Auth Platform → Clients** → τον OAuth Web Client σου: https://console.cloud.google.com/auth/clients
-2. Στα **Authorized redirect URIs**, πρόσθεσε ακριβώς: `http://localhost:8765/oauth2callback` και αποθήκευσε.
+2. Στα **Authorized redirect URIs**, πρόσθεσε ακριβώς: `https://developers.google.com/oauthplayground` και αποθήκευσε. Το `http://localhost:8765/oauth2callback` χρειάζεται μόνο αν επιλέξεις προαιρετικά τον παλιό τοπικό τρόπο.
 3. Στο **Data Access**, χρησιμοποίησε το scope **ΜΟΝΟ** `https://www.googleapis.com/auth/drive.file`. **ΜΗΝ** χρησιμοποιήσεις full `drive` ή `drive.readonly`.
 4. Στο **Audience**, βεβαιώσου ότι ο προσωπικός Google λογαριασμός σου είναι **Test user**, αν το app βρίσκεται σε Testing.
 
@@ -36,78 +36,51 @@ Responsive spooky ψηφιακό άλμπουμ φωτογραφιών και β
 
 Θα χρειαστείς τρία **δημόσια** στοιχεία για τη σελίδα `owner.html`: `OAuth Client ID`, `Google Picker API key`, `Project Number` (αριθμός στο project dashboard). Μην εισάγεις εκεί Client Secret ή Refresh Token. Ούτε το Worker API URL είναι μυστικό.
 
-## 2. Λήψη refresh token με ασφαλή τοπική διαδικασία
+## 2. Browser-only OAuth (χωρίς PowerShell)
 
-Η μέθοδος αυτή **δεν** χρησιμοποιεί Google OAuth Playground ούτε άλλη ενδιάμεση υπηρεσία: τρέχει στον δικό σου Windows/Node υπολογιστή και χρησιμοποιεί **authorization code + PKCE**.
+**Προτεινόμενος τρόπος για αυτό το project:** το επίσημο [Google OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) με **δικό σου OAuth Web Client**. Δεν απαιτεί εγκατάσταση προγραμμάτων ούτε τοπικό terminal.
 
-```powershell
-git clone https://github.com/PagkalosG/halloween-party.git
-cd halloween-party
-node worker/scripts/google-auth-local.mjs
-```
+> Σημαντικό για την ασφάλεια: το OAuth Playground είναι υπηρεσία της Google. Όταν επιλέξεις "Use your own OAuth credentials", το Client ID και το Client Secret μεταφέρονται στους servers της Google για την ανταλλαγή του OAuth code. Μην το χρησιμοποιήσεις αν δεν θέλεις να γίνει αυτό. Με δικό σου Client ID/Secret το Playground δεν ανακαλεί αυτομάτως το refresh token σε 24 ώρες (αλλά ισχύουν οι υπόλοιποι κανόνες λήξης της Google).
 
-- Αν έχεις ήδη clone του repository, κάνε `git pull` αντί για νέο clone.
-- Συμπλήρωσε **Client ID** και **Client Secret** μόνο στο τοπικό terminal (το Client Secret εμφανίζεται κατά την πληκτρολόγηση). Μην αποθηκεύσεις την έξοδο σε αρχείο.
-- Το script εμφανίζει URL της Google. Άνοιξέ το στον browser όπου είσαι συνδεδεμένος στο **ίδιο προσωπικό Google account** που έχει τον φάκελο.
-- Επίλεξε το `drive.file` scope. Ο browser επιστρέφει στο `http://localhost:8765/oauth2callback`, και το script τυπώνει το **refresh token μόνο στο terminal**.
-- Αυτό το token πηγαίνει **μόνο στο Cloudflare Secret `GOOGLE_REFRESH_TOKEN`**. Δεν πρέπει να μπει ποτέ στο GitHub ή σε συνομιλία.
+1. Google Cloud → **Google Auth Platform → Clients** → επίλεξε το Web OAuth Client του project **Halloween Party Album**.
+2. Στο **Authorized redirect URIs** πρόσθεσε **ακριβώς** `https://developers.google.com/oauthplayground`. Save. Μπορείς να κρατήσεις το προηγούμενο localhost URI, δεν χρειάζεται να το χρησιμοποιήσεις.
+3. Άνοιξε https://developers.google.com/oauthplayground/ και πάτησε **το γρανάζι επάνω δεξιά**.
+4. Ρύθμισε **OAuth flow: Server-side**, **Access type: Offline**, **Force prompt: Consent Screen**. Ενεργοποίησε **Use your own OAuth credentials** και συμπλήρωσε εκεί το **Client ID** και **Client Secret** (ΟΧΙ στη συνομιλία ή στο repository).
+5. Στο **Step 1 → Input your own scopes** επικόλλησε **ΜΟΝΟ** `https://www.googleapis.com/auth/drive.file`. Πάτησε **Authorize APIs**.
+6. Επίλεξε τον ίδιο προσωπικό Google λογαριασμό που έχει τον φάκελο Halloween και επιβεβαίωσε το ζητούμενο scope. **Μην παραχωρήσεις πλήρη πρόσβαση Drive.**
+7. Στο **Step 2** πάτησε **Exchange authorization code for tokens**. Αν ολοκληρωθεί επιτυχώς, θα εμφανιστεί το **Refresh token**. Κράτησέ το προσωρινά ιδιωτικό, για να το περάσεις στο Cloudflare Secret `GOOGLE_REFRESH_TOKEN`. Μην το στείλεις σε chat, GitHub ή screenshot.
 
-> OAuth Testing: Για External apps σε Testing τα refresh tokens λήγουν συνήθως μετά από **7 ημέρες**. Πριν την πραγματική εκδήλωση, ολοκλήρωσε την κατάσταση δημοσίευσης της εφαρμογής (Audience → Publish App / In production, αναλόγως της κονσόλας) και έλεγξε αν απαιτείται verification. Εάν μεταβάλεις scope ή ανακαλέσεις πρόσβαση, δημιούργησε νέο token. Το `drive.file` είναι non-sensitive scope, αλλά η πολιτική της Google εξακολουθεί να ισχύει.
+> **OAuth Testing:** Για External apps σε Testing τα refresh tokens λήγουν συνήθως μετά από 7 ημέρες. Πριν από πραγματική χρήση, ρύθμισε την κατάσταση δημοσίευσης (Audience) και έλεγξε τις απαιτήσεις Google verification. Μετά από scope/consent αλλαγές, ενδέχεται να χρειαστεί νέο token.
 
-## 3. Cloudflare Worker (ξεχωριστός από Atlas)
+## 3. Cloudflare Worker μέσω Dashboard και GitHub (χωρίς PowerShell)
 
-Στον ίδιο Cloudflare λογαριασμό, θα δημοσιεύσεις έναν **διαφορετικό Worker**. Δεν πρέπει να τροποποιήσεις τον Worker του D&D Atlas.
+1. Στον ίδιο Cloudflare λογαριασμό του Atlas άνοιξε https://dash.cloudflare.com/ → **Workers & Pages → Create application** → επέλεξε **GitHub**.
+2. Εξουσιοδότησε (αν ζητηθεί) τη σύνδεση GitHub και επίλεξε `PagkalosG/halloween-party`.
+3. Όρισε **Worker name**: `halloween-party-album-api` — πρέπει να ταιριάζει ακριβώς με το `name` στο `worker/wrangler.toml`.
+4. **Root directory / Project path**: `worker` (όχι η ρίζα του repository). **Production branch**: `main`. **Build command**: κενό εφόσον επιτρέπεται, γιατί δεν απαιτείται μεταγλώττιση. **Deploy command**: `npx wrangler deploy`.
+5. Πάτησε **Save and Deploy**. Η πρώτη έκδοση χωρίς secrets θα πρέπει να επιστρέφει στο `/api/config` κατάσταση `ready:false`. Τα uploads παραμένουν κλειστά.
+6. Στον νέο Worker → **Settings → Variables and Secrets** πρόσθεσε ακριβώς τα παρακάτω ως **Secret**:
+   - `GOOGLE_CLIENT_ID`: το OAuth Client ID
+   - `GOOGLE_CLIENT_SECRET`: το OAuth Client Secret
+   - `GOOGLE_REFRESH_TOKEN`: το Refresh token από το επίσημο Google Playground
+   - `UPLOAD_SIGNING_KEY`: τυχαίο κλειδί τουλάχιστον 32 bytes (φτιάξ' το με password generator, ποτέ μην το κοινοποιήσεις)
+   - `TURNSTILE_SITE_KEY`: το δημόσιο site key του Turnstile
+   - `TURNSTILE_SECRET`: το μυστικό key του Turnstile
+7. Το Turnstile δημιουργείται από Cloudflare Dashboard → **Turnstile**, για το hostname `pagkalosg.github.io`. Μην ενεργοποιήσεις uploads μέχρι να έχουμε ελέγξει το album.
 
-```powershell
-cd worker
-npm install
-npx wrangler login
-npx wrangler deploy
-```
+**Public variables** που ορίζονται ήδη στο `worker/wrangler.toml`:
+- `DRIVE_FOLDER_ID = "1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC"`
+- `FRONTEND_ORIGIN = "https://pagkalosg.github.io"`
+- `UPLOADS_ENABLED = "false"` — κλειστό μέχρι τις δοκιμές.
+- `UPLOAD_LIMITER` — Cloudflare Rate Limiting binding.
 
-Η πρώτη δημοσίευση γίνεται χωρίς Google Secrets: το API θα εμφανίζει `ready:false`, όπως πρέπει.
+Η ρύθμιση **rate limiting** χρησιμοποιεί το `[[ratelimits]]` του Wrangler (24 προσπάθειες / 60 δευτερόλεπτα ανά κλειδί, κατά προσέγγιση και ανά Cloudflare location). Αν ο Cloudflare λογαριασμός ή η έκδοση της πλατφόρμας δεν υποστηρίζει το binding, **μην το αφαιρέσεις απλώς για να δουλέψουν τα uploads**: ο Worker αποτυγχάνει με ασφαλή τρόπο όταν λείπει.
 
-**Ρύθμισε τα Secrets** από το ίδιο `worker/` folder:
+Το Worker χρησιμοποιεί κρυπτογραφημένα AES-GCM upload session tokens — οι Google resumable upload URLs δεν δημοσιεύονται ως απλό κείμενο στον browser.
 
-```powershell
-npx wrangler secret put GOOGLE_CLIENT_ID
-npx wrangler secret put GOOGLE_CLIENT_SECRET
-npx wrangler secret put GOOGLE_REFRESH_TOKEN
-npx wrangler secret put UPLOAD_SIGNING_KEY
-npx wrangler secret put TURNSTILE_SITE_KEY
-npx wrangler secret put TURNSTILE_SECRET
-```
+Μόλις δημοσιευτεί, κράτησε **μόνο τη δημόσια διεύθυνση** `https://halloween-party-album-api.<subdomain>.workers.dev`. Μπορείς να τη στείλεις στη συνομιλία για να ενημερώσουμε το `config.js` μέσω GitHub. **Μη στείλεις κανένα OAuth ή Turnstile Secret.**
 
-Το `UPLOAD_SIGNING_KEY` πρέπει να είναι τυχαίο και ισχυρό. Για παράδειγμα, δημιούργησέ το **στον υπολογιστή σου**:
-
-```powershell
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
-```
-
-Μόνο τα πραγματικά ευαίσθητα στοιχεία χρειάζονται Secret· το `TURNSTILE_SITE_KEY` είναι δημόσιο από τη φύση του, αλλά ο Worker το αναμένει ως μεταβλητή και μπορεί επίσης να ρυθμιστεί ως Secret.
-
-Δημιούργησε Cloudflare Turnstile widget για το hostname `pagkalosg.github.io`: https://dash.cloudflare.com/ . Το Site key και Secret key τα παίρνεις από εκεί.
-
-**Τελευταία εντολή** από `worker/`:
-```powershell
-npx wrangler deploy
-```
-
-Στο `worker/wrangler.toml` είναι ήδη:
-- `DRIVE_FOLDER_ID`: ο ID του επιλεγμένου φακέλου.
-- `FRONTEND_ORIGIN`: `https://pagkalosg.github.io`.
-- `UPLOADS_ENABLED = "false"`: **σκόπιμα κλειστό** μέχρι να ολοκληρώσουμε δοκιμές.
-- `UPLOAD_LIMITER`: Cloudflare Rate Limiting binding (24 προσπάθειες ανά 60 sec/κλειδί, **κατά προσέγγιση**, ανά Cloudflare location). Χρειάζεται Wrangler >=4.36.
-
-Οι **σύνδεσμοι Drive resumable sessions** δεν επιστρέφονται ποτέ αυτούσιοι στον browser. Το Worker τους κρυπτογραφεί με AES-GCM χρησιμοποιώντας κλειδί που προκύπτει από το `UPLOAD_SIGNING_KEY`.
-
-Μόλις πάρεις το URL του Worker, π.χ. `https://halloween-party-album-api.<subdomain>.workers.dev`, συμπλήρωσε **μόνο αυτό** στο δημόσιο αρχείο `config.js`:
-```js
-window.SHADOW_ALBUM_CONFIG = {
-  apiBase: "https://halloween-party-album-api.<subdomain>.workers.dev"
-};
-```
-Αυτό μπορεί επίσης να γίνει απευθείας από ChatGPT/GitHub αφού δώσεις **μόνο το δημόσιο URL**, όχι secret.
+Η εξουσιοδότηση ενός folder και των επιλεγμένων υπαρχόντων αρχείων από το `drive.file` γίνεται στη σελίδα `owner.html` όπως περιγράφεται παρακάτω.
 
 ## 4. Google Picker: παραχώρηση πρόσβασης μόνο σε συγκεκριμένα αρχεία
 
