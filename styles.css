@@ -166,11 +166,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
 .filter.active{color:#f5ddd0;border-color:#a14940;background:linear-gradient(100deg,#5d191d,#281016);box-shadow:0 0 21px #aa322121,inset 0 0 12px #923d3650}
 .filter span{opacity:.65;font-size:10px;min-width:1ch;font-variant-numeric:tabular-nums}
 .gallery-tools{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
-.searchbox{display:flex;align-items:center;gap:11px;min-height:44px;min-width:195px;padding:10px 13px;border:1px solid #6340398a;background:#100d10;color:#ae8176}
-.searchbox:focus-within{border-color:#ba7a66}
-.searchbox svg{width:17px;height:17px;flex:none}
-.searchbox input{border:0;outline:0!important;min-width:0;width:170px;color:#f0dcd0;background:transparent;font-size:12px}
-.searchbox input::placeholder{color:#82736e}
 .select{min-height:44px;background:#100d10;border:1px solid #6340398a;color:#d5bdb0;padding:10px 27px 10px 12px;font-size:12px}
 .select:hover{border-color:#ba7a66}
 /* Masonry with pure imagery — NO file names or dates displayed. */
@@ -278,12 +273,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
   .archive-status{font-size:0;gap:0;min-width:18px}
   .archive-status #connectionText{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}
   .archive-status .status-dot{width:8px;height:8px}
-  .gallery-controls{display:block;margin-bottom:18px;padding-top:12px;padding-bottom:18px}
-  .filterrow{gap:3px;margin-bottom:14px}
+  .gallery-controls{display:flex;flex-wrap:wrap;margin-bottom:18px;padding-top:12px;padding-bottom:18px}
+  .filterrow{gap:3px;margin-bottom:0}
   .filter{padding:10px 11px;gap:5px;font-size:11px;min-height:39px}
-  .gallery-tools{display:flex;width:100%;gap:7px}
-  .searchbox{min-width:0;flex:1}
-  .searchbox input{width:100%}
+  .gallery-tools{display:flex;width:auto;gap:7px;margin-left:auto}
   .select{max-width:136px;font-size:11px;padding:8px 23px 8px 8px}
   .gallery{columns:2 145px;column-gap:9px}
   .gallery-card{margin-bottom:9px}
@@ -662,9 +655,8 @@ body{isolation:isolate}
   box-shadow:0 15px 50px #0005;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.filter,.searchbox,.select{border-radius:999px}
+.filter,.select{border-radius:999px}
 .filter.active{border-radius:999px}
-.searchbox input{border-radius:0}
 .gallery-card{border-radius:17px}
 .gallery-card::after{border-radius:11px}
 .card-hit{border-radius:16px}
