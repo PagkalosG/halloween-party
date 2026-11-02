@@ -97,6 +97,7 @@
     if(busy || viewDialog.open) return;
     busy=true;
     loading.hidden=false;
+    let modified=false;
     try {
       const fresh=[];
       let cursor='',nextVersion='';
@@ -111,8 +112,8 @@
       const additions=fresh.filter(x=>!old.has(x.id)).length;
       collection=fresh;
       version=nextVersion;
+      modified=true;
       setCounts();
-      render();
       setBanner('ΤΟ ΑΡΧΕΙΟ ΤΩΝ ΣΚΙΩΝ · ΖΩΝΤΑΝΗ ΣΥΛΛΟΓΗ','online');
       if(!initial && additions>0)notify(
         additions===1?'Μία νέα ανάμνηση προστέθηκε στη συλλογή!':
@@ -126,8 +127,10 @@
       if(!initial)console.warn('Gallery update:',e.message);
       else notify(e.message);
     }finally{
-      busy=false;loading.hidden=true;
-      if(collection.length)render();
+      busy=false;
+      loading.hidden=true;
+      // Rebuild the DOM exactly once and only after an actual change.
+      if(modified)render();
     }
   }
   function showViewer() {
