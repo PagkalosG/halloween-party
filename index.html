@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="./assets/gothic-horror-collage.webp" fetchpriority="high">
-  <link rel="stylesheet" href="./styles.css?v=7">
+  <link rel="stylesheet" href="./styles.css?v=8">
 </head>
 <body>
   <div class="screen-grain" aria-hidden="true"></div>
@@ -29,7 +29,6 @@
       <img id="ambientImage" src="./assets/gothic-horror-collage.webp" alt="" width="1800" height="1050" loading="lazy" decoding="async">
     </picture>
     <div class="ambient-backdrop-tint"></div>
-    <div class="ambient-backdrop-mist"></div>
   </div>
 
   <header class="topbar wrap">
@@ -51,32 +50,6 @@
   </header>
 
 
-  <!-- The cloud doors meet at the center, then part. No JS = no loader. -->
-  <div class="cinematic-intro" id="cinematicIntro" hidden aria-label="Κινηματογραφική εισαγωγή" role="region">
-    <div class="intro-backdrop"></div>
-    <div class="intro-dark"></div>
-    <div class="intro-clouds intro-clouds-distant"></div>
-    <!-- Sculpted cloud banks drift independently of the opening fog curtains. -->
-    <div class="intro-cloud-puff cloud-puff-1"></div>
-    <div class="intro-cloud-puff cloud-puff-2"></div>
-    <div class="intro-cloud-puff cloud-puff-3"></div>
-    <div class="intro-cloud-puff cloud-puff-4"></div>
-    <div class="intro-cloud-puff cloud-puff-5"></div>
-    <div class="intro-fog intro-fog-left"></div>
-    <div class="intro-fog intro-fog-right"></div>
-    <div class="intro-fog intro-fog-low"></div>
-    <div class="intro-seam"></div>
-    <div class="intro-sigil" aria-hidden="true">
-      <svg viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="42" cy="42" r="33" stroke="currentColor" stroke-width="1"/>
-        <circle cx="42" cy="42" r="25" stroke="currentColor" stroke-width=".55" opacity=".7"/>
-        <path d="m42 12 27 48H15L42 12Z M42 71 15 23h54L42 71Z" stroke="currentColor" stroke-width=".8"/>
-        <circle cx="42" cy="42" r="4.2" fill="currentColor"/>
-      </svg>
-    </div>
-    <button type="button" id="introSkip" class="intro-skip">ΠΑΡΑΛΕΙΨΗ <span aria-hidden="true">→</span></button>
-  </div>
-
   <main id="αρχή">
     <section class="cinema-hero wrap" aria-labelledby="main-title">
       <picture class="cinema-picture" aria-hidden="true">
@@ -85,10 +58,8 @@
       </picture>
       <div class="cinema-vignette" aria-hidden="true"></div>
       <div class="cinema-red-glow" aria-hidden="true"></div>
-      <div class="cinema-bottom-fog" aria-hidden="true"></div>
       <div class="cinema-frame" aria-hidden="true"></div>
       <div class="cinema-title">
-        <span class="cinema-emblem" aria-hidden="true">✦</span>
         <h1 id="main-title">ΤΟ ΑΡΧΕΙΟ <span>ΤΩΝ ΣΚΙΩΝ</span></h1>
         <p>Κάποιες στιγμές δεν έπρεπε να καταγραφούν.</p>
         <span class="cinema-divider" aria-hidden="true"><i></i>✣<i></i></span>
@@ -145,7 +116,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="./config.js"></script>
-  <script defer src="./intro.js?v=2"></script>
+  <script defer src="./parallax.js?v=1"></script>
   <script defer src="./app.js?v=6"></script>
 </body>
 </html>
