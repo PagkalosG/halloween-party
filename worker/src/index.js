@@ -1,3 +1,4 @@
+import {gatePage} from './gate.js';
 /**
  * Το Αρχείο των Σκιών — read-only Drive album.
  *
@@ -251,62 +252,55 @@ async function serveMedia(env,request,ctx,thumbnail=false) {
   headers.set('Content-Disposition',downloading
     ? "attachment; filename*=UTF-8''"+encodeURIComponent(file.name)
     : 'inline');
-  headers.set('Cache-Control',cacheable
-    ? 'public, max-age='+IMAGE_CACHE_SECONDS+', immutable'
-    : 'private, no-store');
+  // The Worker Cache API is used only after authorization. Shared/public
+  // HTTP caches must not serve private photos independently of that check.
+  headers.set('Cache-Control','private, no-store');
   const response=new Response(upstream.body,{status:upstream.status,headers});
   return cacheable?cachedResponse(response,request,ctx,IMAGE_CACHE_SECONDS):response;
 }
-function cors(response,request,env) {
-  const headers=new Headers(response.headers);
-  const origin=request.headers.get('Origin');
-  if(origin===frontend(env)) {
-    headers.set('Access-Control-Allow-Origin',origin);
-    headers.set('Access-Control-Allow-Methods','GET,HEAD,OPTIONS');
-    headers.set('Access-Control-Allow-Headers','Range,Content-Type');
-    headers.set('Access-Control-Expose-Headers','Content-Length,Content-Range,Accept-Ranges');
-    headers.set('Vary','Origin');
-  }
-  headers.set('X-Content-Type-Options','nosniff');
-  return new Response(response.body,{status:response.status,headers});
-}
 export default {
   async fetch(request,env,ctx) {
-    const url=new URL(request.url);
-    if(request.method==='OPTIONS') {
-      return cors(new Response(null,{status:204}),request,env);
-    }
-    // There are deliberately NO upload, write, update or delete endpoints.
-    if(request.method!=='GET' && request.method!=='HEAD') {
-      return cors(fail('Επιτρέπεται μόνο προβολή.',405),request,env);
-    }
+    const url=new URL(request.url),path=url.pathname;
     try {
+      if(path==='/auth/login') {
+        return protectedResponse(request.method==='POST'
+          ? await handleLogin(request,env) : fail('Μη επιτρεπτή μέθοδος.',405));
+      }
+      if(path==='/auth/logout') {
+        if(request.method!=='POST')return protectedResponse(fail('Μη επιτρεπτή μέθοδος.',405));
+        if(request.headers.get('Origin')!==url.origin)return protectedResponse(fail('Μη επιτρεπτή προέλευση.',403));
+        const response=json({ok:true});
+        response.headers.set('Set-Cookie',clearCookie());
+        return protectedResponse(response);
+      }
+      if(path==='/auth/status')
+        return protectedResponse(json({authenticated:await validSession(request,env),gateReady:authReady(env)}));
+      if(request.method!=='GET')return protectedResponse(fail('Επιτρέπεται μόνο προβολή.',405));
+      // The GitHub Pages copy is public, but on this hostname the HTML, CSS
+      // and JavaScript are served with the same-origin signed session cookie.
+      if(!path.startsWith('/api/'))return publicPage(request,env);
+      if(!(await validSession(request,env)))return noAccess();
+      if(!configured(env))
+        return protectedResponse(fail('Η σύνδεση με το Drive δεν έχει ολοκληρωθεί.',503));
       let response;
-      if(url.pathname==='/api/config') {
-        response=json({ready:configured(env),readOnly:true,
-          syncMode:'cron',syncMinutes:5,
+      if(path==='/api/config') {
+        response=json({ready:true,readOnly:true,syncMode:'cron',syncMinutes:5,
           uploadsEnabled:false,cacheEnabled:Boolean(env.ALBUM_INDEX)});
-      } else if(!configured(env)) {
-        response=fail('Η σύνδεση του άλμπουμ περιμένει Service Account και Cloudflare KV.',503);
-      } else if(url.pathname==='/api/folder-access') {
+      }else if(path==='/api/folder-access') {
         response=json({folderAccessible:await folderAccessible(env)});
-      } else if(url.pathname==='/api/items') {
+      }else if(path==='/api/items') {
         response=await listFiles(env,request);
-      } else if(url.pathname==='/api/changes') {
+      }else if(path==='/api/changes') {
         response=await changes(env,request);
-      } else if(url.pathname.startsWith('/api/thumb/')) {
+      }else if(path.startsWith('/api/thumb/')) {
         response=await serveMedia(env,request,ctx,true);
-      } else if(url.pathname.startsWith('/api/media/')) {
+      }else if(path.startsWith('/api/media/')) {
         response=await serveMedia(env,request,ctx,false);
-      } else response=fail('Η διαδρομή δεν υπάρχει.',404);
-      return cors(response,request,env);
+      }else response=fail('Η διαδρομή δεν υπάρχει.',404);
+      return protectedResponse(response);
     }catch(error){
-      console.error('Album API error:',error?.message||'unknown');
-      const text=error?.message==='FOLDER_UNAVAILABLE'
-        ? 'Το Service Account δεν έχει δικαίωμα προβολής του φακέλου.'
-        : error?.message==='NOT_CONFIGURED' ? 'Η σύνδεση δεν έχει ολοκληρωθεί.'
-        : 'Προσωρινό πρόβλημα επικοινωνίας με το Google Drive.';
-      return cors(fail(text,503),request,env);
+      console.error('Album gate/API error:',error?.message||'unknown');
+      return protectedResponse(fail('Προσωρινό πρόβλημα επικοινωνίας με το αρχείο.',503));
     }
   },
   async scheduled(controller,env,ctx) {
