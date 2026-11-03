@@ -18,6 +18,12 @@
     if(!apiBase) throw Error('Ο διακομιστής του άλμπουμ δεν έχει συνδεθεί.');
     const r=await fetch(getApi(path),{cache:'no-store'});
     const body=await r.json().catch(()=>({}));
+    if(r.status===401) {
+      // Sessions expire after seven days or immediately when the secret rotates.
+      // Never leave guests looking at a broken/empty gallery.
+      location.replace('/');
+      throw Error('Η πύλη ζητά ξανά το συνθηματικό.');
+    }
     if(!r.ok) throw Error(body.error||'Δεν ήταν δυνατή η επικοινωνία με το άλμπουμ.');
     return body;
   }
