@@ -33,6 +33,7 @@ jobs:
           node --check app.js
           node --check intro.js
           node --check worker/src/index.js
+          node --check worker/src/gate.js
       - name: Reject obsolete upload and owner UI
         run: |
           test ! -e owner.html
@@ -43,7 +44,9 @@ jobs:
           fi
       - name: Verify custom horror collage and drifting cloud layers
         run: |
+          test -s assets/butler-door.webp
           test -s assets/gothic-horror-collage.webp
+          grep -q 'halloween-party-album-api.pagkalosgeo.workers.dev/' index.html
           test "$(wc -c < assets/gothic-horror-collage.webp)" -lt 950000
           grep -q 'assets/gothic-horror-collage.webp' index.html
           grep -q 'id="cinematicIntro"' index.html
