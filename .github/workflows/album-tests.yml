@@ -6,6 +6,7 @@ on:
       - 'worker/**'
       - 'app.js'
       - 'parallax.js'
+      - 'intro.js' # catch accidental restoration of the retired loader
       - 'index.html'
       - 'styles.css'
       - 'assets/**'
@@ -53,6 +54,14 @@ jobs:
           grep -q 'halloween-party-album-api.pagkalosgeo.workers.dev/' index.html
           grep -q 'assets/gothic-horror-collage.webp' index.html
           grep -q 'src="./parallax.js?v=1"' index.html
+          if grep -q 'intro.js' index.html; then
+            echo "Legacy second-stage loader is not allowed"
+            exit 1
+          fi
+          if grep -q 'intro\\.js' worker/src/index.js; then
+            echo "Legacy loader route must stay closed"
+            exit 1
+          fi
           grep -q 'id="ambientBackdrop"' index.html
           if grep -E -q 'cinematicIntro|intro-sigil|intro-fog|introSkip|cinema-bottom-fog' index.html; then
             echo "Old cinematic loader remains in HTML"
