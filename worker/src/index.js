@@ -274,7 +274,7 @@ const allowedStatic = path => path==='/' || path==='/index.html' ||
 
 function authReady(env) {
   return Boolean(
-    typeof env.ALBUM_PASSWORD==='string' && env.ALBUM_PASSWORD.length >= 12 &&
+    typeof env.ALBUM_PASSWORD==='string' && env.ALBUM_PASSWORD.length >= 8 &&
     typeof env.ALBUM_SESSION_SECRET==='string' && env.ALBUM_SESSION_SECRET.length >= 32 &&
     env.LOGIN_LIMITER && typeof env.LOGIN_LIMITER.limit==='function'
   );
