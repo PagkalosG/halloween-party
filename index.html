@@ -3,6 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- The public GitHub Pages address is an entry point, not the album's host.
+       All guests enter through the same-origin Cloudflare password gate. -->
+  <script>
+    if (location.hostname === 'pagkalosg.github.io' &&
+        location.pathname.startsWith('/halloween-party')) {
+      location.replace('https://halloween-party-album-api.pagkalosgeo.workers.dev/' + location.hash);
+    }
+  </script>
   <meta name="theme-color" content="#080709">
   <meta name="description" content="Το Αρχείο των Σκιών — Halloween 2026.">
   <title>Το Αρχείο των Σκιών</title>
