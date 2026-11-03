@@ -193,7 +193,11 @@ function headerContentType(upstream, fallback){
 function cachedResponse(response, request, ctx, seconds) {
   if(response.ok && typeof caches!=='undefined' && caches.default && ctx?.waitUntil) {
     const key=new Request(new URL(request.url).toString(),{method:'GET'});
-    ctx.waitUntil(caches.default.put(key,response.clone()).catch(()=>{}));
+    // This copy is stored inside the Worker Cache API, not sent to guests.
+    const internalHeaders=new Headers(response.headers);
+    internalHeaders.set('Cache-Control','public, max-age='+seconds+', immutable');
+    const internal=new Response(response.clone().body,{status:response.status,headers:internalHeaders});
+    ctx.waitUntil(caches.default.put(key,internal).catch(()=>{}));
   }
   return response;
 }
@@ -328,7 +332,11 @@ function protectedResponse(response) {
   headers.set('X-Robots-Tag','noindex,nofollow');
   headers.set('Referrer-Policy','no-referrer');
   headers.set('Cross-Origin-Resource-Policy','same-origin');
-  if(!headers.has('Cache-Control'))headers.set('Cache-Control','private, no-store');
+  // Cache API hits carry an internal public TTL. Never propagate it to clients.
+  const type=headers.get('Content-Type')||'';
+  if(type.startsWith('image/')||type.startsWith('video/'))
+    headers.set('Cache-Control','private, no-store');
+  else if(!headers.has('Cache-Control'))headers.set('Cache-Control','private, no-store');
   return new Response(response.body,{status:response.status,headers});
 }
 function noAccess() {
