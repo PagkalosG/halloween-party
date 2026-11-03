@@ -15,3 +15,14 @@ binding = "ALBUM_INDEX"
 
 [triggers]
 crons = ["*/5 * * * *"]
+
+
+# Slows down password guessing at the haunted gate.
+# Counters are per Cloudflare location; not a globally strict rate limit.
+[[ratelimits]]
+name = "LOGIN_LIMITER"
+namespace_id = "1081003"
+
+[ratelimits.simple]
+limit = 8
+period = 60
