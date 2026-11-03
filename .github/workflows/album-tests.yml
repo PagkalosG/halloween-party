@@ -5,7 +5,7 @@ on:
     paths:
       - 'worker/**'
       - 'app.js'
-      - 'intro.js'
+      - 'parallax.js'
       - 'index.html'
       - 'styles.css'
       - 'assets/**'
@@ -31,7 +31,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check app.js
-          node --check intro.js
+          node --check parallax.js
           node --check worker/src/index.js
           node --check worker/src/gate.js
       - name: Reject obsolete upload and owner UI
@@ -42,18 +42,26 @@ jobs:
             echo "Obsolete uploader UI detected"
             exit 1
           fi
-      - name: Verify custom horror collage and drifting cloud layers
+      - name: Verify direct gallery entry and removed legacy fog
         run: |
           test -s assets/butler-door.webp
           test -s assets/gothic-horror-collage.webp
+          test ! -e intro.js
+          test ! -e assets/haunted-hero-desktop.webp
+          test ! -e assets/haunted-hero-mobile.webp
+          test ! -e .github/workflows/hero-asset.yml
           grep -q 'halloween-party-album-api.pagkalosgeo.workers.dev/' index.html
-          test "$(wc -c < assets/gothic-horror-collage.webp)" -lt 950000
           grep -q 'assets/gothic-horror-collage.webp' index.html
-          grep -q 'id="cinematicIntro"' index.html
-          grep -q 'src="./intro.js?v=2"' index.html
+          grep -q 'src="./parallax.js?v=1"' index.html
           grep -q 'id="ambientBackdrop"' index.html
-          grep -q 'class="intro-cloud-puff cloud-puff-5"' index.html
-          grep -q 'id="introSkip"' index.html
+          if grep -E -q 'cinematicIntro|intro-sigil|intro-fog|introSkip|cinema-bottom-fog' index.html; then
+            echo "Old cinematic loader remains in HTML"
+            exit 1
+          fi
+          if grep -E -q 'cinematic-intro|intro-fog|intro-sigil|cinema-bottom-fog' styles.css; then
+            echo "Old loader CSS remains"
+            exit 1
+          fi
       - name: Worker security smoke tests
         working-directory: worker
         run: npm test
