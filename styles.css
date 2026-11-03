@@ -810,3 +810,20 @@ body{isolation:isolate}
     background:linear-gradient(180deg,rgba(5,5,8,.22),rgba(5,6,9,.15) 47%,rgba(5,5,8,.65) 80%,#080709 100%);
   }
 }
+
+/* Discreet native-style session exit in the protected album. */
+.topbar-actions{display:flex;align-items:center;gap:17px}
+.logout-button{
+  display:grid;place-items:center;width:41px;height:41px;min-width:41px;
+  border:1px solid #a478696b;border-radius:50%;
+  background:rgba(25,18,23,.65);color:#ddbbac;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:border-color .2s,background .2s
+}
+.logout-button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.logout-button:hover{background:#643239;border-color:#d49a83}
+@media(max-width:680px){
+  .topbar-actions{gap:8px}
+  .logout-button{width:37px;height:37px;min-width:37px}
+  .logout-button svg{width:17px;height:17px}
+}
