@@ -258,6 +258,126 @@ async function serveMedia(env,request,ctx,thumbnail=false) {
   const response=new Response(upstream.body,{status:upstream.status,headers});
   return cacheable?cachedResponse(response,request,ctx,IMAGE_CACHE_SECONDS):response;
 }
+
+const SESSION_COOKIE = '__Host-shadow_session';
+const SESSION_SECONDS = 7 * 24 * 60 * 60;
+const PUBLIC_SITE = 'https://pagkalosg.github.io/halloween-party/';
+const encoder = new TextEncoder();
+
+const allowedStatic = path => path==='/' || path==='/index.html' ||
+  /^\/(?:styles\.css|app\.js|intro\.js|config\.js|favicon\.ico|robots\.txt)$/.test(path) ||
+  /^\/assets\/[a-zA-Z0-9_./-]{1,180}$/.test(path) && !path.includes('..');
+
+function authReady(env) {
+  return Boolean(
+    typeof env.ALBUM_PASSWORD==='string' && env.ALBUM_PASSWORD.length >= 12 &&
+    typeof env.ALBUM_SESSION_SECRET==='string' && env.ALBUM_SESSION_SECRET.length >= 32 &&
+    env.LOGIN_LIMITER && typeof env.LOGIN_LIMITER.limit==='function'
+  );
+}
+async function sessionKey(env) {
+  return crypto.subtle.importKey('raw',encoder.encode(env.ALBUM_SESSION_SECRET),
+    {name:'HMAC',hash:'SHA-256'},false,['sign','verify']);
+}
+async function comparePasswords(given,expected) {
+  if(typeof given!=='string'||given.length<1||given.length>128)return false;
+  const [a,b]=await Promise.all([given,expected].map(t=>crypto.subtle.digest('SHA-256',encoder.encode(t))));
+  const x=new Uint8Array(a), y=new Uint8Array(b);
+  let diff=0;
+  for(let i=0;i<32;i++)diff |= x[i]^y[i];
+  return diff===0;
+}
+function getCookie(request) {
+  const raw=request.headers.get('Cookie')||'';
+  const match=raw.split(';').map(v=>v.trim()).find(v=>v.startsWith(SESSION_COOKIE+'='));
+  return match?match.slice(SESSION_COOKIE.length+1):'';
+}
+async function newSession(env) {
+  const expires=String(Math.floor(Date.now()/1000)+SESSION_SECONDS);
+  const nonce=b64url(crypto.getRandomValues(new Uint8Array(16)));
+  const payload='v1.'+expires+'.'+nonce;
+  const signature=new Uint8Array(await crypto.subtle.sign('HMAC',await sessionKey(env),encoder.encode(payload)));
+  return payload+'.'+b64url(signature);
+}
+async function validSession(request,env) {
+  if(!authReady(env))return false;
+  const parts=getCookie(request).split('.');
+  if(parts.length!==4||parts[0]!=='v1')return false;
+  const [version,expiration,nonce,signature]=parts;
+  if(!/^\d{10,11}$/.test(expiration)||!/^[A-Za-z0-9_-]{22}$/.test(nonce)||
+    !/^[A-Za-z0-9_-]{43}$/.test(signature))return false;
+  const now=Math.floor(Date.now()/1000),expires=Number(expiration);
+  if(expires<=now||expires>now+SESSION_SECONDS)return false;
+  try {
+    const base64=signature.replace(/-/g,'+').replace(/_/g,'/');
+    const sig=Uint8Array.from(atob(base64+'='.repeat((4-base64.length%4)%4)),c=>c.charCodeAt(0));
+    return crypto.subtle.verify('HMAC',await sessionKey(env),sig,
+      encoder.encode(version+'.'+expiration+'.'+nonce));
+  }catch{return false;}
+}
+function secureCookie(value) {
+  return SESSION_COOKIE+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age='+SESSION_SECONDS;
+}
+function clearCookie() {
+  return SESSION_COOKIE+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
+}
+function protectedResponse(response) {
+  const headers=new Headers(response.headers);
+  headers.set('X-Content-Type-Options','nosniff');
+  headers.set('X-Frame-Options','DENY');
+  headers.set('X-Robots-Tag','noindex,nofollow');
+  headers.set('Referrer-Policy','no-referrer');
+  headers.set('Cross-Origin-Resource-Policy','same-origin');
+  if(!headers.has('Cache-Control'))headers.set('Cache-Control','private, no-store');
+  return new Response(response.body,{status:response.status,headers});
+}
+function noAccess() {
+  return protectedResponse(json({error:'Ο πορτιέρης ζητά τον μυστικό κωδικό.',loginRequired:true},401));
+}
+async function handleLogin(request,env) {
+  if(!authReady(env))return fail('Η πύλη χρειάζεται ακόμη τις ασφαλείς ρυθμίσεις της.',503);
+  if(request.headers.get('Origin')!==new URL(request.url).origin)return fail('Μη επιτρεπτή προέλευση.',403);
+  if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type')||''))
+    return fail('Μη έγκυρο αίτημα.',415);
+  if(Number(request.headers.get('Content-Length')||0)>2048)return fail('Μεγάλο αίτημα.',413);
+  const ip=(request.headers.get('CF-Connecting-IP')||'unknown').slice(0,70);
+  const {success}=await env.LOGIN_LIMITER.limit({key:ip});
+  if(!success)return fail('Πάρα πολλές προσπάθειες. Δοκίμασε σε ένα λεπτό.',429);
+  let data;
+  try {
+    const body=await request.text();
+    if(body.length>2048)return fail('Μεγάλο αίτημα.',413);
+    data=JSON.parse(body);
+  } catch {return fail('Μη έγκυρο αίτημα.',400);}
+  if(!(await comparePasswords(data?.password,env.ALBUM_PASSWORD)))
+    return fail('Ο πορτιέρης δεν σε αναγνωρίζει.',401);
+  const response=json({ok:true,expiresIn:SESSION_SECONDS});
+  response.headers.set('Set-Cookie',secureCookie(await newSession(env)));
+  return response;
+}
+async function publicPage(request,env) {
+  const path=new URL(request.url).pathname;
+  if(!(await validSession(request,env))) {
+    if(path==='/'||path==='/index.html')
+      return protectedResponse(new Response(gatePage(),{
+        headers:{
+          'Content-Type':'text/html; charset=utf-8',
+          'Cache-Control':'no-store',
+          'Content-Security-Policy':"default-src 'none'; img-src https://pagkalosg.github.io; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+        }
+      }));
+    return noAccess();
+  }
+  if(!allowedStatic(path))return protectedResponse(fail('Η διαδρομή δεν υπάρχει.',404));
+  const asset=path==='/'?'index.html':path.slice(1);
+  const upstream=await fetch(new URL(asset,PUBLIC_SITE),{redirect:'manual'});
+  if(!upstream.ok)return protectedResponse(fail('Το αρχείο της σελίδας δεν είναι διαθέσιμο.',upstream.status===404?404:502));
+  const headers=new Headers();
+  headers.set('Content-Type',upstream.headers.get('Content-Type')||'application/octet-stream');
+  headers.set('Cache-Control',asset==='index.html'?'private, no-store':'private, max-age=3600');
+  return protectedResponse(new Response(upstream.body,{status:upstream.status,headers}));
+}
+
 export default {
   async fetch(request,env,ctx) {
     const url=new URL(request.url),path=url.pathname;
