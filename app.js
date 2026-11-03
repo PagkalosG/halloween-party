@@ -183,6 +183,15 @@
       render();
     });
   }
+  const logoutButton=$('#logoutButton');
+  if(logoutButton)logoutButton.addEventListener('click',async()=>{
+    logoutButton.disabled=true;
+    try {
+      await fetch('/auth/logout',{method:'POST',credentials:'same-origin',cache:'no-store'});
+    }finally {
+      location.replace('/');
+    }
+  });
   $('#sort').addEventListener('change',()=>{renderLimit=96;render();});
   $('#loadMore').addEventListener('click',()=>{renderLimit+=96;render();});
   async function checkUpdates() {
