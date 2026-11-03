@@ -42,6 +42,25 @@ for(const path of [
     assert.equal(response.headers.get('Access-Control-Allow-Origin'),null);
   });
 }
+test('guest passwords of exactly 8 characters are accepted',async()=>{
+  const shortEnv={...env,ALBUM_PASSWORD:'Spooky88'};
+  const response=await worker.fetch(request('/auth/login',{
+    method:'POST',
+    headers:{Origin:base,'Content-Type':'application/json'},
+    body:JSON.stringify({password:'Spooky88'})
+  }),shortEnv);
+  assert.equal(response.status,200);
+  assert.match(response.headers.get('Set-Cookie'),/__Host-shadow_session=/);
+});
+test('guest passwords shorter than 8 characters fail closed',async()=>{
+  const weakEnv={...env,ALBUM_PASSWORD:'seven77'};
+  const response=await worker.fetch(request('/auth/login',{
+    method:'POST',
+    headers:{Origin:base,'Content-Type':'application/json'},
+    body:JSON.stringify({password:'seven77'})
+  }),weakEnv);
+  assert.equal(response.status,503);
+});
 test('wrong password is not accepted',async()=>{
   const response=await login('incorrect-password');
   assert.equal(response.status,401);
