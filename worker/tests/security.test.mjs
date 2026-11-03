@@ -4,53 +4,115 @@ import {webcrypto} from 'node:crypto';
 import worker from '../src/index.js';
 
 globalThis.crypto ||= webcrypto;
-const origin='https://pagkalosg.github.io';
 const base='https://halloween-party-album-api.pagkalosgeo.workers.dev';
-const request=(path,options)=>new Request(base+path,options);
-const emptyEnv={DRIVE_FOLDER_ID:'1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC',FRONTEND_ORIGIN:origin};
+const request=(path,options={})=>new Request(base+path,options);
+const sessionSecret='This-long-random-session-test-secret-is-not-a-production-password';
+const env={
+  DRIVE_FOLDER_ID:'1cnjXZT6E8DQVmUjA7rTO_GZHzq5eRUQC',
+  FRONTEND_ORIGIN:'https://pagkalosg.github.io',
+  GOOGLE_SERVICE_ACCOUNT_EMAIL:'tests@example.iam.gserviceaccount.com',
+  GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY:'not-used-for-auth-tests',
+  ALBUM_INDEX:{get:async()=>null,put:async()=>{}},
+  ALBUM_PASSWORD:'super-secret-test-only',
+  ALBUM_SESSION_SECRET:sessionSecret,
+  LOGIN_LIMITER:{limit:async()=>({success:true})}
+};
+const login=async(password=env.ALBUM_PASSWORD,extra={})=>worker.fetch(request('/auth/login',{
+  method:'POST',headers:{Origin:base,'Content-Type':'application/json',...extra},
+  body:JSON.stringify({password})
+}),env);
+const cookieOf=response=>response.headers.get('Set-Cookie')?.split(';')[0]||'';
 
-test('does not expose old OAuth configuration',async()=>{
-  const res=await worker.fetch(request('/api/config'),emptyEnv);
-  const data=await res.json();
-  assert.equal(res.status,200);
-  assert.equal(data.ready,false);
-  assert.equal(data.readOnly,true);
-  assert.equal(data.uploadsEnabled,false);
-  assert.equal(data.syncMinutes,5);
-  assert.ok(!('turnstileSiteKey' in data));
-  assert.ok(!('GOOGLE_REFRESH_TOKEN' in data));
+test('landing page is a haunted password gate without cookie',async()=>{
+  const response=await worker.fetch(request('/'),env);
+  assert.equal(response.status,200);
+  const html=await response.text();
+  assert.match(html,/Ο ΠΟΡΤΙΕΡΗΣ ΣΕ ΠΕΡΙΜΕΝΕΙ/);
+  assert.match(html,/type="password"/);
+  assert.doesNotMatch(html,/#gallery/);
+  assert.equal(response.headers.get('Cache-Control'),'no-store');
 });
-
-for(const [method,path] of [
-  ['POST','/api/upload/authorize'],['POST','/api/upload/start'],
-  ['PUT','/api/upload/chunk'],['DELETE','/api/media/aaaaabbbbbcccc']
-]){
-  test(method+' '+path+' cannot upload or delete',async()=>{
-    const res=await worker.fetch(request(path,{method,headers:{Origin:origin}}),emptyEnv);
-    assert.equal(res.status,405);
-    assert.equal((await res.json()).error,'Επιτρέπεται μόνο προβολή.');
+for(const path of [
+  '/api/config','/api/items','/api/changes','/api/folder-access',
+  '/api/thumb/valid-file-000000','/api/media/valid-file-000000','/styles.css'
+]) {
+  test('private resource requires signed session: '+path,async()=>{
+    const response=await worker.fetch(request(path),env);
+    assert.equal(response.status,401);
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'),null);
   });
 }
-
-test('read-only worker rejects all old upload endpoints even on GET',async()=>{
-  const res=await worker.fetch(request('/api/upload/start'),emptyEnv);
-  assert.equal(res.status,503); // fail closed before service account is configured
+test('wrong password is not accepted',async()=>{
+  const response=await login('incorrect-password');
+  assert.equal(response.status,401);
+  assert.equal(response.headers.get('Set-Cookie'),null);
 });
-
-test('CORS only authorizes public album origin',async()=>{
-  const good=await worker.fetch(request('/api/items',{
-    method:'OPTIONS',headers:{Origin:origin}
-  }),emptyEnv);
-  assert.equal(good.status,204);
-  assert.equal(good.headers.get('Access-Control-Allow-Origin'),origin);
-  const bad=await worker.fetch(request('/api/items',{
-    method:'OPTIONS',headers:{Origin:'https://untrusted.example'}
-  }),emptyEnv);
-  assert.equal(bad.headers.get('Access-Control-Allow-Origin'),null);
+test('cross-origin login forbidden',async()=>{
+  const response=await login(env.ALBUM_PASSWORD,{Origin:'https://untrusted.example'});
+  assert.equal(response.status,403);
 });
-
-test('cron fails closed until read-only service account is configured',async()=>{
-  let invoked=false;
-  await worker.scheduled({cron:'*/5 * * * *'},emptyEnv,{waitUntil(){invoked=true;}});
-  assert.equal(invoked,false);
+test('rate-limited login returns 429',async()=>{
+  const rejected={...env,LOGIN_LIMITER:{limit:async()=>({success:false})}};
+  const response=await worker.fetch(request('/auth/login',{method:'POST',
+    headers:{Origin:base,'Content-Type':'application/json'},
+    body:JSON.stringify({password:env.ALBUM_PASSWORD})
+  }),rejected);
+  assert.equal(response.status,429);
+});
+test('valid password issues secure HttpOnly same-origin cookie',async()=>{
+  const response=await login();
+  assert.equal(response.status,200);
+  const cookie=response.headers.get('Set-Cookie');
+  assert.match(cookie,/__Host-shadow_session=/);
+  assert.match(cookie,/HttpOnly/);
+  assert.match(cookie,/Secure/);
+  assert.match(cookie,/SameSite=Lax/);
+  const status=await worker.fetch(request('/auth/status',{headers:{Cookie:cookieOf(response)}}),env);
+  assert.equal((await status.json()).authenticated,true);
+});
+test('authenticated session can view read-only config',async()=>{
+  const cookie=cookieOf(await login());
+  const response=await worker.fetch(request('/api/config',{headers:{Cookie:cookie}}),env);
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).uploadsEnabled,false);
+});
+test('tampered cookie is invalid',async()=>{
+  const original=cookieOf(await login());
+  const broken=original.slice(0,-2)+(original.endsWith('AA')?'BB':'AA');
+  const response=await worker.fetch(request('/api/config',{headers:{Cookie:broken}}),env);
+  assert.equal(response.status,401);
+});
+test('logout clears cookie',async()=>{
+  const response=await worker.fetch(request('/auth/logout',{
+    method:'POST',headers:{Origin:base,Cookie:cookieOf(await login())}
+  }),env);
+  assert.equal(response.status,200);
+  assert.match(response.headers.get('Set-Cookie'),/Max-Age=0/);
+});
+for(const [method,path] of [
+  ['POST','/api/upload/authorize'],['POST','/api/upload/start'],
+  ['PUT','/api/upload/chunk'],['DELETE','/api/media/valid-file-000000']
+]) {
+  test(method+' '+path+' cannot upload or delete',async()=>{
+    const response=await worker.fetch(request(path,{method}),env);
+    assert.equal(response.status,405);
+  });
+}
+test('fails closed when password secrets are not configured',async()=>{
+  const response=await worker.fetch(request('/api/items'),{
+    ...env,ALBUM_SESSION_SECRET:undefined
+  });
+  assert.equal(response.status,401);
+  const denied=await worker.fetch(request('/auth/login',{
+    method:'POST',headers:{Origin:base,'Content-Type':'application/json'},
+    body:JSON.stringify({password:env.ALBUM_PASSWORD})
+  }),{...env,ALBUM_SESSION_SECRET:undefined});
+  assert.equal(denied.status,503);
+});
+test('cron remains independent of login, but needs Drive config',async()=>{
+  let called=false;
+  await worker.scheduled({},{
+    ...env,ALBUM_INDEX:undefined
+  },{waitUntil(){called=true;}});
+  assert.equal(called,false);
 });
