@@ -269,7 +269,7 @@ const PUBLIC_SITE = 'https://pagkalosg.github.io/halloween-party/';
 const encoder = new TextEncoder();
 
 const allowedStatic = path => path==='/' || path==='/index.html' ||
-  /^\/(?:styles\.css|app\.js|intro\.js|config\.js|favicon\.ico|robots\.txt)$/.test(path) ||
+  /^\/(?:styles\.css|app\.js|parallax\.js|config\.js|favicon\.ico|robots\.txt)$/.test(path) ||
   /^\/assets\/[a-zA-Z0-9_./-]{1,180}$/.test(path) && !path.includes('..');
 
 function authReady(env) {
